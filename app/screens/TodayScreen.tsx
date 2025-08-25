@@ -21,24 +21,8 @@ interface Task {
 
 export default function TodayScreen() {
   const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: '1',
-      title: 'Work',
-      description: 'Trabajar',
-      completed: false,
-      emoji: '💻👨‍💼',
-      category: 'Today',
-      tag: 'Home 🏠 #'
-    },
-    {
-      id: '2',
-      title: 'surf',
-      description: 'Ir a surfear a la tarde',
-      completed: false,
-      emoji: '',
-      category: 'Today',
-      tag: 'Inbox'
-    }
+    { id: '1', title: 'Work', description: 'Trabajar', completed: false, emoji: '💻👨‍💼', category: 'Today', tag: 'Home 🏠 #' },
+    { id: '2', title: 'Surf', description: 'Ir a surfear a la tarde', completed: false, emoji: '🏄‍♂️', category: 'Today', tag: 'Inbox' }
   ]);
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -47,49 +31,52 @@ export default function TodayScreen() {
   const [selectedCategory, setSelectedCategory] = useState('Today');
 
   const [showUndo, setShowUndo] = useState(false);
+  const [lastCompleted, setLastCompleted] = useState<Task | null>(null);
   const undoAnim = useRef(new Animated.Value(0)).current;
   const undoTimeout = useRef<NodeJS.Timeout | null>(null);
-  const [lastCompleted, setLastCompleted] = useState<Task | null>(null);
 
   const toggleTask = (id: string) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 
     if (!task.completed) {
-      // completar → desaparecer tarea + mostrar undo
+      // eliminar de la lista
       setTasks(tasks.filter(t => t.id !== id));
       setLastCompleted(task);
       setShowUndo(true);
 
-      // animación de entrada
+      // animar entrada
       Animated.timing(undoAnim, {
         toValue: 1,
         duration: 250,
         useNativeDriver: true,
       }).start();
 
-      // auto ocultar después de 3s
+      // autohide a los 3s
       if (undoTimeout.current) clearTimeout(undoTimeout.current);
       undoTimeout.current = setTimeout(() => {
-        Animated.timing(undoAnim, {
-          toValue: 0,
-          duration: 250,
-          useNativeDriver: true,
-        }).start(() => {
-          setShowUndo(false);
-          setLastCompleted(null);
-        });
+        hideUndo();
       }, 3000);
     }
+  };
+
+  const hideUndo = () => {
+    Animated.timing(undoAnim, {
+      toValue: 0,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowUndo(false);
+      setLastCompleted(null);
+    });
   };
 
   const handleUndo = () => {
     if (lastCompleted) {
       setTasks([...tasks, { ...lastCompleted, completed: false }]);
     }
-    setShowUndo(false);
-    setLastCompleted(null);
     if (undoTimeout.current) clearTimeout(undoTimeout.current);
+    hideUndo();
   };
 
   const addTask = () => {
@@ -132,66 +119,58 @@ export default function TodayScreen() {
         <Text style={styles.date}>{formatDate()}</Text>
       </View>
 
-      {/* Tasks List */}
+      {/* Tasks */}
       <ScrollView style={styles.tasksList} showsVerticalScrollIndicator={false}>
         {tasks.map((task) => (
           <View key={task.id} style={styles.taskItem}>
             <TouchableOpacity
-              style={[styles.checkbox, task.completed && styles.checkboxCompleted]}
+              style={styles.checkbox}
               onPress={() => toggleTask(task.id)}
-            >
-              {task.completed && <View style={styles.checkmark} />}
-            </TouchableOpacity>
-
+            />
             <View style={styles.taskContent}>
               <View style={styles.taskHeader}>
-                <Text style={[styles.taskTitle, task.completed && styles.taskTitleCompleted]}>
-                  {task.title} {task.emoji}
-                </Text>
+                <Text style={styles.taskTitle}>{task.title} {task.emoji}</Text>
                 <Text style={styles.taskTag}>{task.tag}</Text>
               </View>
-              <Text style={[styles.taskDescription, task.completed && styles.taskDescriptionCompleted]}>
-                {task.description}
-              </Text>
+              <Text style={styles.taskDescription}>{task.description}</Text>
             </View>
           </View>
         ))}
       </ScrollView>
 
-      {/* Bottom bar con Undo + FAB */}
-      <View style={styles.bottomBar}>
-        {showUndo && (
-          <Animated.View 
-            style={[
-              styles.undoContainer,
-              {
-                opacity: undoAnim,
-                transform: [
-                  { translateX: undoAnim.interpolate({ inputRange: [0,1], outputRange: [200, 0] }) }
-                ]
-              }
-            ]}
-          >
-            <TouchableOpacity onPress={handleUndo}>
-              <Text style={styles.undoText}>Undo</Text>
-              <Text style={styles.undoSubText}>Completed</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
-
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setShowAddModal(true)}
+      {/* Undo snackbar */}
+      {showUndo && (
+        <Animated.View 
+          style={[
+            styles.undoContainer,
+            {
+              opacity: undoAnim,
+              transform: [
+                { translateX: undoAnim.interpolate({ inputRange: [0,1], outputRange: [200, 0] }) }
+              ]
+            }
+          ]}
         >
-          <Plus size={24} color="#ffffff" />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity onPress={handleUndo}>
+            <Text style={styles.undoText}>Undo</Text>
+            <Text style={styles.undoSubText}>Completed</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
 
-      {/* Add Task Modal */}
+      {/* FAB fijo */}
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => setShowAddModal(true)}
+      >
+        <Plus size={24} color="#ffffff" />
+      </TouchableOpacity>
+
+      {/* Modal */}
       <Modal
         visible={showAddModal}
         animationType="slide"
-        transparent={true}
+        transparent
         onRequestClose={() => setShowAddModal(false)}
       >
         <TouchableWithoutFeedback onPress={() => setShowAddModal(false)}>
@@ -202,7 +181,6 @@ export default function TodayScreen() {
             >
               <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View style={styles.modalSheet}>
-                  {/* Input título */}
                   <TextInput
                     style={styles.titleInput}
                     placeholder="e.g., Replace lightbulb tomorrow at 3pm..."
@@ -210,7 +188,6 @@ export default function TodayScreen() {
                     onChangeText={setNewTaskTitle}
                     autoFocus
                   />
-                  {/* Input descripción */}
                   <TextInput
                     style={styles.descriptionInput}
                     placeholder="Description"
@@ -218,7 +195,6 @@ export default function TodayScreen() {
                     onChangeText={setNewTaskDescription}
                     multiline
                   />
-                  {/* Categorías */}
                   <View style={styles.categoryButtons}>
                     <TouchableOpacity style={styles.categoryChip}>
                       <Calendar size={16} color={selectedCategory === 'Today' ? '#0f7b3e' : '#6b7280'} style={{marginRight: 6}} />
@@ -232,13 +208,8 @@ export default function TodayScreen() {
                       <Bell size={16} color="#6b7280" style={{marginRight: 6}} />
                       <Text style={styles.categoryChipText}>Reminders</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.categoryChip}>
-                      <Text style={styles.categoryChipText}>...</Text>
-                    </TouchableOpacity>
                   </View>
-                  {/* Separador */}
                   <View style={styles.separator} />
-                  {/* Selector Inbox + botón enviar */}
                   <View style={styles.bottomRow}>
                     <TouchableOpacity style={styles.dropdown}>
                       <Inbox size={18} color="#6b7280" style={{marginRight: 6}} />
@@ -263,39 +234,61 @@ export default function TodayScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
+  container: { flex: 1, backgroundColor: '#fff' },
 
-  // HEADER
+  // Header
   header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 12 },
-  headerTop: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 12 },
+  headerTop: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 12 },
   headerIcon: { marginLeft: 20 },
   title: { fontSize: 36, fontWeight: '700', color: '#1a1a1a', marginBottom: 4 },
   date: { fontSize: 16, fontWeight: '500', color: '#6b7280' },
 
-  // TASKS
+  // Tasks
   tasksList: { flex: 1, paddingHorizontal: 20 },
   taskItem: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-  checkbox: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#d1d5db', marginRight: 16, marginTop: 2, justifyContent: 'center', alignItems: 'center' },
-  checkboxCompleted: { backgroundColor: '#f44336', borderColor: '#f44336' },
-  checkmark: { width: 8, height: 8, backgroundColor: '#ffffff', borderRadius: 4 },
+  checkbox: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#d1d5db', marginRight: 16 },
   taskContent: { flex: 1 },
-  taskHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  taskTitle: { fontSize: 16, fontWeight: '600', color: '#1a1a1a', flex: 1 },
-  taskTitleCompleted: { textDecorationLine: 'line-through', color: '#9ca3af' },
-  taskTag: { fontSize: 13, color: '#6b7280', marginLeft: 8 },
+  taskHeader: { flexDirection: 'row', justifyContent: 'space-between' },
+  taskTitle: { fontSize: 16, fontWeight: '600', color: '#1a1a1a' },
+  taskTag: { fontSize: 13, color: '#6b7280' },
   taskDescription: { fontSize: 14, color: '#6b7280', marginTop: 2 },
-  taskDescriptionCompleted: { textDecorationLine: 'line-through', color: '#9ca3af' },
 
-  // BOTTOM BAR
-  bottomBar: { position: 'absolute', bottom: 20, left: 20, right: 20, flexDirection: 'row', alignItems: 'center' },
-  undoContainer: { flex: 1, backgroundColor: '#fff', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16, marginRight: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+  // Undo
+  undoContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 100, // deja espacio al FAB
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
   undoText: { color: '#dc2626', fontWeight: '600', fontSize: 16 },
   undoSubText: { color: '#6b7280', fontSize: 12 },
 
   // FAB
-  addButton: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#f44336', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 4 },
+  addButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#f44336',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
 
-  // MODAL
+  // Modal
   modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.3)' },
   modalSheet: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxWidth: width, alignSelf: 'center', width: '100%' },
   titleInput: { fontSize: 16, fontWeight: '500', marginBottom: 8, paddingVertical: 6, color: '#111827' },
