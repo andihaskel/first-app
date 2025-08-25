@@ -1,17 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
+import {View, Text, TouchableOpacity, StyleSheet, Animated} from 'react-native';
+
 interface PauseScreenProps {
   onTimerComplete: () => void;
   onContinue: () => void;
   timerComplete: boolean;
 }
+
 const PauseScreen: React.FC<PauseScreenProps> = ({
   onTimerComplete,
   onContinue,
-  timerComplete
+  timerComplete,
 }) => {
   const [timeLeft, setTimeLeft] = useState(5);
   const [showContent, setShowContent] = useState(true);
-  const [showButton, setShowButton] = useState(false);
+  const [fadeAnim] = useState(new Animated.Value(0));
+
   useEffect(() => {
     if (timeLeft > 0) {
       const timer = setTimeout(() => {
@@ -20,43 +24,85 @@ const PauseScreen: React.FC<PauseScreenProps> = ({
       return () => clearTimeout(timer);
     } else {
       onTimerComplete();
-      // Hide content and then show button with fade-in
       setShowContent(false);
-      setTimeout(() => {
-        setShowButton(true);
-      }, 500); // Small delay before showing button
+      // Animate button fade in
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }).start();
     }
-  }, [timeLeft, onTimerComplete]);
-  return <div className="h-full w-full flex flex-col items-center justify-center bg-white px-6">
-      {showContent && <>
-          <div className="mb-8">
-            <div className="text-6xl font-medium text-gray-700 transition-all">
-              {timeLeft}
-            </div>
-          </div>
-          <div className="flex items-center mb-4">
-            <div className="w-6 h-6 text-gray-700 mr-2" />
-            <h1 className="text-2xl font-medium text-gray-700">Respirá...</h1>
-          </div>
-          <p className="text-lg text-center text-gray-600 mb-10">
-            ¿Seguro que quieres entrar?
-          </p>
-        </>}
-      {showButton && <button className="w-64 py-3 px-6 rounded-md text-gray-700 font-medium bg-cream border border-cream-dark shadow-sm hover:bg-cream-dark transition-colors opacity-0 animate-fadeIn" onClick={onContinue} style={{
-      animation: 'fadeIn 0.8s ease forwards'
-    }}>
-          Continuar a la app
-        </button>}
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-      `}</style>
-    </div>;
+  }, [timeLeft, onTimerComplete, fadeAnim]);
+
+  return (
+    <View style={styles.container}>
+      {showContent && (
+        <>
+          <View style={styles.timerContainer}>
+            <Text style={styles.timerText}>{timeLeft}</Text>
+          </View>
+          <Text style={styles.title}>Respirá...</Text>
+          <Text style={styles.subtitle}>¿Seguro que quieres entrar?</Text>
+        </>
+      )}
+      {timerComplete && (
+        <Animated.View style={[styles.buttonContainer, {opacity: fadeAnim}]}>
+          <TouchableOpacity style={styles.continueButton} onPress={onContinue}>
+            <Text style={styles.buttonText}>Continuar a la app</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+    </View>
+  );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 24,
+  },
+  timerContainer: {
+    marginBottom: 32,
+  },
+  timerText: {
+    fontSize: 96,
+    fontWeight: '500',
+    color: '#374151',
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 16,
+  },
+  subtitle: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: '#6b7280',
+    marginBottom: 40,
+  },
+  buttonContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  continueButton: {
+    backgroundColor: '#F2D98D',
+    borderWidth: 1,
+    borderColor: '#E9CC7A',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 6,
+    width: 256,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#374151',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+});
+
 export default PauseScreen;

@@ -1,168 +1,328 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Circle, PlusIcon, InstagramIcon, ArrowRightIcon } from 'lucide-react';
+import React, {useState, useRef} from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  PanGestureHandler,
+  State,
+} from 'react-native';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  useAnimatedGestureHandler,
+  runOnJS,
+  withSpring,
+} from 'react-native-reanimated';
 import TaskItem from './TaskItem';
+
+interface Task {
+  id: number;
+  text: string;
+  completed: boolean;
+}
+
 interface TodoScreenProps {
   onGoToTasks: () => void;
   onContinueToApp: () => void;
 }
+
 const TodoScreen: React.FC<TodoScreenProps> = ({
   onGoToTasks,
-  onContinueToApp
+  onContinueToApp,
 }) => {
-  const [tasks, setTasks] = useState([{
-    id: 1,
-    text: 'Terminar presentación',
-    completed: false
-  }, {
-    id: 2,
-    text: 'Enviar email a cliente',
-    completed: false
-  }, {
-    id: 3,
-    text: 'Preparar reunión de mañana',
-    completed: false
-  }]);
+  const [tasks, setTasks] = useState<Task[]>([
+    {id: 1, text: 'Terminar presentación', completed: false},
+    {id: 2, text: 'Enviar email a cliente', completed: false},
+    {id: 3, text: 'Preparar reunión de mañana', completed: false},
+  ]);
   const [newTask, setNewTask] = useState('');
   const [isAddingTask, setIsAddingTask] = useState(false);
-  // Slider state
-  const [sliderPosition, setSliderPosition] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const sliderRef = useRef<HTMLDivElement>(null);
-  const maxSliderWidth = useRef(0);
-  const startX = useRef(0);
-  useEffect(() => {
-    if (sliderRef.current) {
-      const sliderWidth = sliderRef.current.parentElement?.clientWidth || 0;
-      maxSliderWidth.current = sliderWidth - (sliderRef.current.clientWidth || 0);
-    }
-  }, []);
-  const handleTouchStart = (e: React.TouchEvent) => {
-    startX.current = e.touches[0].clientX;
-    setIsDragging(true);
-  };
-  const handleMouseDown = (e: React.MouseEvent) => {
-    startX.current = e.clientX;
-    setIsDragging(true);
-  };
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-    const currentX = e.touches[0].clientX;
-    const diff = currentX - startX.current;
-    const newPosition = Math.max(0, Math.min(sliderPosition + diff, maxSliderWidth.current));
-    setSliderPosition(newPosition);
-    startX.current = currentX;
-  };
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    const currentX = e.clientX;
-    const diff = currentX - startX.current;
-    const newPosition = Math.max(0, Math.min(sliderPosition + diff, maxSliderWidth.current));
-    setSliderPosition(newPosition);
-    startX.current = currentX;
-  };
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-    if (sliderPosition >= maxSliderWidth.current * 0.9) {
-      // Slider is complete, redirect to app
-      onContinueToApp();
-    } else {
-      // Reset slider position
-      setSliderPosition(0);
-    }
-  };
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    if (sliderPosition >= maxSliderWidth.current * 0.9) {
-      // Slider is complete, redirect to app
-      onContinueToApp();
-    } else {
-      // Reset slider position
-      setSliderPosition(0);
-    }
-  };
+
+  // Slider animation
+  const translateX = useSharedValue(0);
+  const SLIDER_WIDTH = 300;
+  const THUMB_SIZE = 40;
+  const MAX_TRANSLATE = SLIDER_WIDTH - THUMB_SIZE;
+
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, context) => {
+      context.startX = translateX.value;
+    },
+    onActive: (event, context) => {
+      translateX.value = Math.max(
+        0,
+        Math.min(context.startX + event.translationX, MAX_TRANSLATE),
+      );
+    },
+    onEnd: () => {
+      if (translateX.value > MAX_TRANSLATE * 0.8) {
+        runOnJS(onContinueToApp)();
+      } else {
+        translateX.value = withSpring(0);
+      }
+    },
+  });
+
+  const animatedThumbStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{translateX: translateX.value}],
+    };
+  });
+
+  const animatedBackgroundStyle = useAnimatedStyle(() => {
+    return {
+      width: translateX.value + THUMB_SIZE,
+    };
+  });
+
   const toggleTask = (id: number) => {
-    setTasks(tasks.map(task => task.id === id ? {
-      ...task,
-      completed: !task.completed
-    } : task));
+    setTasks(
+      tasks.map(task =>
+        task.id === id ? {...task, completed: !task.completed} : task,
+      ),
+    );
   };
+
   const handleAddTask = () => {
     if (newTask.trim()) {
-      setTasks([...tasks, {
-        id: Date.now(),
-        text: newTask,
-        completed: false
-      }]);
+      setTasks([
+        ...tasks,
+        {
+          id: Date.now(),
+          text: newTask,
+          completed: false,
+        },
+      ]);
       setNewTask('');
       setIsAddingTask(false);
     }
   };
-  // Get current date
+
   const today = new Date();
   const options: Intl.DateTimeFormatOptions = {
     day: 'numeric',
     month: 'short',
-    weekday: 'long'
+    weekday: 'long',
   };
   const formattedDate = today.toLocaleDateString('es-ES', options);
-  // Calculate progress percentage for slider background
-  const progressPercentage = sliderPosition / maxSliderWidth.current * 100;
-  return <div className="h-full w-full flex flex-col bg-white">
-      {/* Header */}
-      <div className="px-6 pt-10 pb-0">
-        <h1 className="text-4xl font-bold text-black mb-0">Hoy</h1>
-      </div>
-      {/* Date - moved to be directly against the separator */}
-      <div className="px-6 pb-1">
-        <p className="text-sm font-bold text-gray-600">{formattedDate}</p>
-      </div>
-      <div className="border-b border-gray-200 w-full mb-4"></div>
-      {/* Task list */}
-      <div className="flex-1 px-6">
-        {isAddingTask ? <div className="mb-6">
-            <div className="flex items-center border-b border-gray-300 pb-2">
-              <input type="text" className="flex-1 py-2 focus:outline-none text-lg" placeholder="e.g., Reemplazar bombilla mañana a las 3..." value={newTask} onChange={e => setNewTask(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleAddTask()} autoFocus />
-            </div>
-            <div className="flex mt-4 space-x-3">
-              <button className="px-4 py-2 bg-cream text-gray-700 rounded-md text-sm font-medium border border-cream-dark hover:bg-cream-dark transition-colors" onClick={handleAddTask}>
-                Añadir
-              </button>
-              <button className="px-4 py-2 bg-white text-gray-700 rounded-md text-sm font-medium border border-gray-300 hover:bg-gray-50 transition-colors" onClick={() => setIsAddingTask(false)}>
-                Cancelar
-              </button>
-            </div>
-          </div> : <div className="space-y-0">
-            {tasks.map(task => <TaskItem key={task.id} task={task} onToggle={() => toggleTask(task.id)} />)}
-          </div>}
-      </div>
-      {/* Slider for "Continue to app" */}
-      <div className="mt-auto border-t border-gray-200 p-4" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-        <div className="relative h-14 bg-white border border-gray-300 rounded-md flex items-center px-4 overflow-hidden">
-          {/* Progress background */}
-          <div className="absolute top-0 left-0 h-full bg-cream-dark opacity-20 transition-all" style={{
-          width: `${progressPercentage}%`
-        }}></div>
-          {/* Slider thumb */}
-          <div ref={sliderRef} className="absolute h-10 aspect-square bg-cream border border-cream-dark rounded-md flex items-center justify-center cursor-pointer z-10 shadow-sm" style={{
-          left: `${sliderPosition}px`
-        }} onMouseDown={handleMouseDown} onTouchStart={handleTouchStart}>
-            <ArrowRightIcon className="w-5 h-5 text-gray-700" />
-          </div>
-          {/* Slider text */}
-          <div className="w-full text-center text-gray-700 font-medium">
-            Desliza para continuar a la app
-          </div>
-        </div>
-      </div>
-      {/* Floating action button - now more circular */}
-      {!isAddingTask && <button className="absolute bottom-20 right-6 w-14 h-14 rounded-full bg-cream border border-cream-dark text-gray-700 flex items-center justify-center shadow-md hover:bg-cream-dark transition-colors" onClick={() => setIsAddingTask(true)}>
-          <PlusIcon className="w-8 h-8" />
-        </button>}
-      {/* Hidden Instagram button */}
-      <button className="hidden" onClick={onContinueToApp}>
-        <InstagramIcon className="w-5 h-5 mr-2" />
-        Seguir a Instagram
-      </button>
-    </div>;
+
+  return (
+    <GestureHandlerRootView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Hoy</Text>
+        <Text style={styles.date}>{formattedDate}</Text>
+      </View>
+      
+      <View style={styles.separator} />
+
+      <ScrollView style={styles.taskList} showsVerticalScrollIndicator={false}>
+        {isAddingTask ? (
+          <View style={styles.addTaskContainer}>
+            <TextInput
+              style={styles.taskInput}
+              placeholder="e.g., Reemplazar bombilla mañana a las 3..."
+              value={newTask}
+              onChangeText={setNewTask}
+              onSubmitEditing={handleAddTask}
+              autoFocus
+              multiline
+            />
+            <View style={styles.addTaskButtons}>
+              <TouchableOpacity style={styles.addButton} onPress={handleAddTask}>
+                <Text style={styles.addButtonText}>Añadir</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setIsAddingTask(false)}>
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <View>
+            {tasks.map(task => (
+              <TaskItem
+                key={task.id}
+                task={task}
+                onToggle={() => toggleTask(task.id)}
+              />
+            ))}
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Slider */}
+      <View style={styles.sliderContainer}>
+        <View style={styles.sliderTrack}>
+          <Animated.View style={[styles.sliderBackground, animatedBackgroundStyle]} />
+          <PanGestureHandler onGestureEvent={gestureHandler}>
+            <Animated.View style={[styles.sliderThumb, animatedThumbStyle]}>
+              <Text style={styles.arrowText}>→</Text>
+            </Animated.View>
+          </PanGestureHandler>
+          <Text style={styles.sliderText}>Desliza para continuar a la app</Text>
+        </View>
+      </View>
+
+      {/* Add Task Button */}
+      {!isAddingTask && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => setIsAddingTask(true)}>
+          <Text style={styles.fabText}>+</Text>
+        </TouchableOpacity>
+      )}
+    </GestureHandlerRootView>
+  );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    paddingBottom: 4,
+  },
+  title: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginBottom: 0,
+  },
+  date: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#e5e7eb',
+    marginVertical: 16,
+  },
+  taskList: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  addTaskContainer: {
+    marginBottom: 24,
+  },
+  taskInput: {
+    fontSize: 18,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#d1d5db',
+    marginBottom: 16,
+  },
+  addTaskButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  addButton: {
+    backgroundColor: '#F2D98D',
+    borderWidth: 1,
+    borderColor: '#E9CC7A',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  addButtonText: {
+    color: '#374151',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  cancelButton: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  cancelButtonText: {
+    color: '#374151',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  sliderContainer: {
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    padding: 16,
+  },
+  sliderTrack: {
+    height: 56,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  sliderBackground: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    height: '100%',
+    backgroundColor: '#E9CC7A',
+    opacity: 0.2,
+  },
+  sliderThumb: {
+    position: 'absolute',
+    left: 4,
+    width: 40,
+    height: 40,
+    backgroundColor: '#F2D98D',
+    borderWidth: 1,
+    borderColor: '#E9CC7A',
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  arrowText: {
+    fontSize: 20,
+    color: '#374151',
+  },
+  sliderText: {
+    color: '#374151',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 80,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#F2D98D',
+    borderWidth: 1,
+    borderColor: '#E9CC7A',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  fabText: {
+    fontSize: 32,
+    color: '#374151',
+    fontWeight: '300',
+  },
+});
+
 export default TodoScreen;

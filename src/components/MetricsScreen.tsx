@@ -1,108 +1,315 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
-import { ArrowLeftIcon, TrendingUpIcon } from 'lucide-react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+} from 'react-native';
+
 interface MetricsScreenProps {
   onGoBack: () => void;
 }
-const MetricsScreen: React.FC<MetricsScreenProps> = ({
-  onGoBack
-}) => {
+
+const MetricsScreen: React.FC<MetricsScreenProps> = ({onGoBack}) => {
   // Sample data for the chart
-  const data = [{
-    name: 'Lun',
-    intentos: 8,
-    foco: 5
-  }, {
-    name: 'Mar',
-    intentos: 10,
-    foco: 6
-  }, {
-    name: 'Mié',
-    intentos: 7,
-    foco: 4
-  }, {
-    name: 'Jue',
-    intentos: 12,
-    foco: 8
-  }, {
-    name: 'Vie',
-    intentos: 9,
-    foco: 7
-  }, {
-    name: 'Sáb',
-    intentos: 5,
-    foco: 3
-  }, {
-    name: 'Dom',
-    intentos: 6,
-    foco: 4
-  }];
-  return <div className="h-full w-full flex flex-col bg-white px-6 py-8">
-      <div className="flex items-center mb-6">
-        <button className="mr-4 p-2 rounded-md bg-cream border border-cream-dark text-gray-700 hover:bg-cream-dark transition-colors" onClick={onGoBack}>
-          <ArrowLeftIcon className="w-5 h-5" />
-        </button>
-        <h1 className="text-xl font-medium text-gray-700">Tu progreso</h1>
-      </div>
-      <div className="bg-white rounded-md border border-gray-300 shadow-sm p-5 mb-6">
-        <div className="flex items-center mb-4">
-          <TrendingUpIcon className="w-5 h-5 text-gray-700 mr-2" />
-          <h2 className="text-lg font-medium text-gray-700">
-            Estadísticas de esta semana
-          </h2>
-        </div>
-        <div className="h-64 mb-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{
-            top: 10,
-            right: 10,
-            left: -20,
-            bottom: 0
-          }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} />
-              <YAxis axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{
-              borderRadius: '4px',
-              border: '1px solid #E2E8F0',
-              boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
-            }} />
-              <Bar dataKey="intentos" name="Intentos de distracción" fill="#F2D98D" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="foco" name="Veces que elegiste enfocarte" fill="#E9CC7A" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-      <div className="bg-white rounded-md border border-gray-300 p-5 mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-medium text-gray-700">Hoy</h3>
-          <span className="text-sm text-gray-700 font-medium">Jueves</span>
-        </div>
-        <div className="flex space-x-4 mb-3">
-          <div className="flex-1 bg-white rounded-md border border-gray-300 p-3 shadow-sm">
-            <p className="text-sm text-gray-500 mb-1">Intentos</p>
-            <p className="text-2xl font-medium text-gray-800">12</p>
-          </div>
-          <div className="flex-1 bg-white rounded-md border border-gray-300 p-3 shadow-sm">
-            <p className="text-sm text-gray-500 mb-1">Enfoque</p>
-            <p className="text-2xl font-medium text-gray-700">8</p>
-          </div>
-        </div>
-        <p className="text-center text-gray-700 font-medium">
+  const data = [
+    {name: 'Lun', intentos: 8, foco: 5},
+    {name: 'Mar', intentos: 10, foco: 6},
+    {name: 'Mié', intentos: 7, foco: 4},
+    {name: 'Jue', intentos: 12, foco: 8},
+    {name: 'Vie', intentos: 9, foco: 7},
+    {name: 'Sáb', intentos: 5, foco: 3},
+    {name: 'Dom', intentos: 6, foco: 4},
+  ];
+
+  const maxValue = Math.max(...data.map(d => Math.max(d.intentos, d.foco)));
+  const chartHeight = 200;
+
+  return (
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={onGoBack}>
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>Tu progreso</Text>
+      </View>
+
+      <View style={styles.chartContainer}>
+        <View style={styles.chartHeader}>
+          <Text style={styles.chartTitle}>📈 Estadísticas de esta semana</Text>
+        </View>
+        
+        {/* Simple Bar Chart */}
+        <View style={styles.chart}>
+          <View style={styles.chartBars}>
+            {data.map((item, index) => (
+              <View key={index} style={styles.barGroup}>
+                <View style={styles.barContainer}>
+                  <View
+                    style={[
+                      styles.bar,
+                      styles.intentosBar,
+                      {height: (item.intentos / maxValue) * chartHeight},
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.bar,
+                      styles.focoBar,
+                      {height: (item.foco / maxValue) * chartHeight},
+                    ]}
+                  />
+                </View>
+                <Text style={styles.barLabel}>{item.name}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Legend */}
+        <View style={styles.legend}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendColor, {backgroundColor: '#F2D98D'}]} />
+            <Text style={styles.legendText}>Intentos de distracción</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendColor, {backgroundColor: '#E9CC7A'}]} />
+            <Text style={styles.legendText}>Veces que elegiste enfocarte</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.todayContainer}>
+        <View style={styles.todayHeader}>
+          <Text style={styles.todayTitle}>Hoy</Text>
+          <Text style={styles.todayDate}>Jueves</Text>
+        </View>
+        <View style={styles.todayStats}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Intentos</Text>
+            <Text style={styles.statValue}>12</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>Enfoque</Text>
+            <Text style={styles.statValue}>8</Text>
+          </View>
+        </View>
+        <Text style={styles.todayMessage}>
           Hoy redirigiste tu foco 8 veces. ¡Bien hecho!
-        </p>
-      </div>
-      <div className="bg-white rounded-md border border-gray-300 p-5">
-        <h3 className="text-lg font-medium text-gray-700 mb-2">
-          Tu racha actual
-        </h3>
-        <div className="flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-3xl font-bold text-gray-700 mb-1">5 días</p>
-            <p className="text-sm text-gray-600">Mantén el buen trabajo</p>
-          </div>
-        </div>
-      </div>
-    </div>;
+        </Text>
+      </View>
+
+      <View style={styles.streakContainer}>
+        <Text style={styles.streakTitle}>Tu racha actual</Text>
+        <View style={styles.streakContent}>
+          <Text style={styles.streakValue}>5 días</Text>
+          <Text style={styles.streakMessage}>Mantén el buen trabajo</Text>
+        </View>
+      </View>
+    </ScrollView>
+  );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    paddingBottom: 24,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 6,
+    backgroundColor: '#F2D98D',
+    borderWidth: 1,
+    borderColor: '#E9CC7A',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  backButtonText: {
+    fontSize: 20,
+    color: '#374151',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '500',
+    color: '#374151',
+  },
+  chartContainer: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 6,
+    marginHorizontal: 24,
+    marginBottom: 24,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  chartHeader: {
+    marginBottom: 20,
+  },
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#374151',
+  },
+  chart: {
+    height: 240,
+    marginBottom: 20,
+  },
+  chartBars: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+    height: 200,
+    paddingHorizontal: 10,
+  },
+  barGroup: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  barContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    gap: 2,
+    marginBottom: 8,
+  },
+  bar: {
+    width: 12,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    minHeight: 4,
+  },
+  intentosBar: {
+    backgroundColor: '#F2D98D',
+  },
+  focoBar: {
+    backgroundColor: '#E9CC7A',
+  },
+  barLabel: {
+    fontSize: 12,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  legend: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  legendColor: {
+    width: 12,
+    height: 12,
+    borderRadius: 2,
+    marginRight: 8,
+  },
+  legendText: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  todayContainer: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 6,
+    marginHorizontal: 24,
+    marginBottom: 24,
+    padding: 20,
+  },
+  todayHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  todayTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#374151',
+  },
+  todayDate: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+  },
+  todayStats: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 12,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 6,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 32,
+    fontWeight: '500',
+    color: '#1f2937',
+  },
+  todayMessage: {
+    textAlign: 'center',
+    color: '#374151',
+    fontWeight: '500',
+    fontSize: 16,
+  },
+  streakContainer: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 6,
+    marginHorizontal: 24,
+    marginBottom: 40,
+    padding: 20,
+  },
+  streakTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 16,
+  },
+  streakContent: {
+    alignItems: 'center',
+  },
+  streakValue: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#374151',
+    marginBottom: 4,
+  },
+  streakMessage: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+});
+
 export default MetricsScreen;

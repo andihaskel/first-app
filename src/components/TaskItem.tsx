@@ -1,29 +1,87 @@
 import React from 'react';
-import { CheckCircle, Circle } from 'lucide-react';
+import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+
 interface Task {
   id: number;
   text: string;
   completed: boolean;
 }
+
 interface TaskItemProps {
   task: Task;
   onToggle: () => void;
 }
-const TaskItem: React.FC<TaskItemProps> = ({
-  task,
-  onToggle
-}) => {
-  return <div className="flex items-start py-3 relative">
-      <div className="w-6 h-6 mr-4 flex-shrink-0 cursor-pointer" onClick={onToggle}>
-        {task.completed ? <CheckCircle className="w-6 h-6 text-gray-700" /> : <Circle className="w-6 h-6 text-gray-300" strokeWidth={1.5} />}
-      </div>
-      <div className="flex flex-col flex-1 pb-3 cursor-pointer" onClick={onToggle}>
-        <span className={`text-base ${task.completed ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+
+const TaskItem: React.FC<TaskItemProps> = ({task, onToggle}) => {
+  return (
+    <TouchableOpacity style={styles.container} onPress={onToggle}>
+      <View style={styles.checkboxContainer}>
+        <View style={[styles.checkbox, task.completed && styles.checkboxCompleted]}>
+          {task.completed && <Text style={styles.checkmark}>✓</Text>}
+        </View>
+      </View>
+      <View style={styles.textContainer}>
+        <Text style={[styles.taskText, task.completed && styles.taskTextCompleted]}>
           {task.text}
-        </span>
-        {/* Separator that starts from text and goes to the end */}
-        <div className="absolute bottom-0 left-10 right-0 border-b border-gray-200"></div>
-      </div>
-    </div>;
+        </Text>
+        <View style={styles.separator} />
+      </View>
+    </TouchableOpacity>
+  );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 12,
+    position: 'relative',
+  },
+  checkboxContainer: {
+    width: 24,
+    height: 24,
+    marginRight: 16,
+    marginTop: 2,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#d1d5db',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxCompleted: {
+    backgroundColor: '#374151',
+    borderColor: '#374151',
+  },
+  checkmark: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  textContainer: {
+    flex: 1,
+    paddingBottom: 12,
+  },
+  taskText: {
+    fontSize: 16,
+    color: '#1f2937',
+    lineHeight: 24,
+  },
+  taskTextCompleted: {
+    color: '#9ca3af',
+    textDecorationLine: 'line-through',
+  },
+  separator: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: '#e5e7eb',
+  },
+});
+
 export default TaskItem;
