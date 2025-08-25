@@ -4,7 +4,7 @@ import {
   Dimensions, Animated
 } from 'react-native';
 import { useState, useRef } from 'react';
-import { Plus, Menu, MoveHorizontal as MoreHorizontal, Calendar, Flag, Bell, Inbox } from 'lucide-react-native';
+import { Plus, Menu, MoveHorizontal as MoreHorizontal, Calendar, Flag, Bell, Inbox, ArrowLeft } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 
 const { width } = Dimensions.get('window');
@@ -45,7 +45,7 @@ export default function TodayScreen() {
       setLastCompleted(task);
       setShowUndo(true);
 
-      // animar entrada
+      // animar entrada (izq -> der)
       Animated.timing(undoAnim, {
         toValue: 1,
         duration: 250,
@@ -61,6 +61,7 @@ export default function TodayScreen() {
   };
 
   const hideUndo = () => {
+    // animar salida (der -> izq)
     Animated.timing(undoAnim, {
       toValue: 0,
       duration: 250,
@@ -146,14 +147,22 @@ export default function TodayScreen() {
             {
               opacity: undoAnim,
               transform: [
-                { translateX: undoAnim.interpolate({ inputRange: [0,1], outputRange: [200, 0] }) }
+                { 
+                  translateX: undoAnim.interpolate({ 
+                    inputRange: [0,1], 
+                    outputRange: [-200, 0] // entra de izquierda a derecha
+                  }) 
+                }
               ]
             }
           ]}
         >
-          <TouchableOpacity onPress={handleUndo}>
-            <Text style={styles.undoText}>Undo</Text>
-            <Text style={styles.undoSubText}>Completed</Text>
+          <TouchableOpacity onPress={handleUndo} style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <ArrowLeft size={18} color="#dc2626" style={{ marginRight: 6 }} />
+            <View>
+              <Text style={styles.undoText}>Undo</Text>
+              <Text style={styles.undoSubText}>Completed</Text>
+            </View>
           </TouchableOpacity>
         </Animated.View>
       )}
@@ -258,7 +267,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     left: 20,
-    right: 100, // deja espacio al FAB
+    right: 100,
     backgroundColor: '#fff',
     borderRadius: 12,
     paddingVertical: 10,
