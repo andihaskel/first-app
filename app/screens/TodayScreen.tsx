@@ -1,10 +1,14 @@
 import { 
   View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, 
-  KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback, Keyboard 
+  KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback, Keyboard,
+  Dimensions
 } from 'react-native';
 import { useState } from 'react';
 import { Plus, Menu, MoveHorizontal as MoreHorizontal, Calendar, Flag, Bell, Inbox } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
+
+const { width } = Dimensions.get('window');
+const isWeb = Platform.OS === 'web';
 
 interface Task {
   id: string;
@@ -118,14 +122,14 @@ export default function TodayScreen() {
       <Modal
         visible={showAddModal}
         animationType="slide"
-        transparent
+        transparent={!isWeb}
         onRequestClose={() => setShowAddModal(false)}
       >
-        <TouchableWithoutFeedback onPress={() => setShowAddModal(false)}>
+        <TouchableWithoutFeedback onPress={isWeb ? undefined : () => setShowAddModal(false)}>
           <View style={styles.modalOverlay}>
             <KeyboardAvoidingView
               style={{ flex: 1, justifyContent: 'flex-end' }}
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              behavior={Platform.OS === "ios" ? "padding" : undefined}
             >
               <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                 <View style={styles.modalSheet}>
@@ -258,14 +262,17 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: isWeb ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.3)',
   },
   modalSheet: {
     backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: isWeb ? 0 : 20,
+    borderTopRightRadius: isWeb ? 0 : 20,
     padding: 20,
     paddingBottom: 40,
+    maxWidth: isWeb ? 500 : width,
+    alignSelf: 'center',
+    width: '100%',
   },
   titleInput: {
     fontSize: 16,
