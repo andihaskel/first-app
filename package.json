@@ -9,10 +9,16 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.1",
     "expo": "~53.0.22",
+    "expo-font": "^13.3.2",
+    "expo-router": "^5.1.4",
     "expo-status-bar": "~2.2.3",
+    "lucide-react-native": "^0.541.0",
     "react": "19.0.0",
-    "react-native": "0.79.6"
+    "react-native": "0.79.6",
+    "react-native-gesture-handler": "^2.28.0",
+    "react-native-reanimated": "^4.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
