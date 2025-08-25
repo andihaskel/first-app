@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
-import PauseScreen from './src/components/PauseScreen';
-import TodoScreen from './src/components/TodoScreen';
-import MetricsScreen from './src/components/MetricsScreen';
+import PauseScreen from '../src/components/PauseScreen';
+import TodoScreen from '../src/components/TodoScreen';
+import MetricsScreen from '../src/components/MetricsScreen';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState('pause');
