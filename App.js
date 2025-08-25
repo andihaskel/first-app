@@ -1,13 +1,11 @@
-import React, {useState} from 'react';
-import {SafeAreaView, StatusBar, StyleSheet} from 'react-native';
+import React, { useState } from 'react';
+import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
 import PauseScreen from './src/components/PauseScreen';
 import TodoScreen from './src/components/TodoScreen';
 import MetricsScreen from './src/components/MetricsScreen';
 
-type ScreenType = 'pause' | 'todo' | 'metrics';
-
-function App(): JSX.Element {
-  const [currentScreen, setCurrentScreen] = useState<ScreenType>('pause');
+export default function App() {
+  const [currentScreen, setCurrentScreen] = useState('pause');
   const [timerComplete, setTimerComplete] = useState(false);
 
   const handleTimerComplete = () => {
@@ -60,5 +58,3 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
 });
-
-export default App;
