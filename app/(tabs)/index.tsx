@@ -1,4 +1,7 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput } from 'react-native';
+import { 
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput, 
+  KeyboardAvoidingView, Platform 
+} from 'react-native';
 import { useState } from 'react';
 import { Plus, Menu, MoreHorizontal } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -122,68 +125,72 @@ export default function TodayScreen() {
 
       {/* Add Task Modal */}
       <Modal
-        visible={showAddModal}
-        animationType="slide"
-        transparent
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
+  visible={showAddModal}
+  animationType="slide"
+  transparent
+>
+  <KeyboardAvoidingView
+    style={styles.modalOverlay}
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+  >
+    <View style={styles.modalSheet}>
 
-            {/* Input título */}
-            <TextInput
-              style={styles.titleInput}
-              placeholder="e.g., Replace lightbulb tomorrow at 3pm..."
-              value={newTaskTitle}
-              onChangeText={setNewTaskTitle}
-            />
+      {/* Input título */}
+      <TextInput
+        style={styles.titleInput}
+        placeholder="e.g., Replace lightbulb tomorrow at 3pm..."
+        value={newTaskTitle}
+        onChangeText={setNewTaskTitle}
+        autoFocus   // 👈 abre el teclado automáticamente
+      />
 
-            {/* Input descripción */}
-            <TextInput
-              style={styles.descriptionInput}
-              placeholder="Description"
-              value={newTaskDescription}
-              onChangeText={setNewTaskDescription}
-              multiline
-            />
+      {/* Input descripción */}
+      <TextInput
+        style={styles.descriptionInput}
+        placeholder="Description"
+        value={newTaskDescription}
+        onChangeText={setNewTaskDescription}
+        multiline
+      />
 
-            {/* Categorías */}
-            <View style={styles.categoryButtons}>
-              {['Today', 'Priority', 'Reminders'].map((category) => (
-                <TouchableOpacity
-                  key={category}
-                  style={[
-                    styles.categoryButton,
-                    selectedCategory === category && styles.categoryButtonSelected
-                  ]}
-                  onPress={() => setSelectedCategory(category)}
-                >
-                  <Text
-                    style={[
-                      styles.categoryButtonText,
-                      selectedCategory === category && styles.categoryButtonTextSelected
-                    ]}
-                  >
-                    {category}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-              <TouchableOpacity style={styles.categoryButton}>
-                <Text style={styles.categoryButtonText}>...</Text>
-              </TouchableOpacity>
-            </View>
+      {/* Categorías */}
+      <View style={styles.categoryButtons}>
+        {['Today', 'Priority', 'Reminders'].map((category) => (
+          <TouchableOpacity
+            key={category}
+            style={[
+              styles.categoryButton,
+              selectedCategory === category && styles.categoryButtonSelected
+            ]}
+            onPress={() => setSelectedCategory(category)}
+          >
+            <Text
+              style={[
+                styles.categoryButtonText,
+                selectedCategory === category && styles.categoryButtonTextSelected
+              ]}
+            >
+              {category}
+            </Text>
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity style={styles.categoryButton}>
+          <Text style={styles.categoryButtonText}>...</Text>
+        </TouchableOpacity>
+      </View>
 
-            {/* Selector de Inbox */}
-            <TouchableOpacity style={styles.dropdown}>
-              <Text style={styles.dropdownText}>📥 Inbox ▼</Text>
-            </TouchableOpacity>
+      {/* Selector de Inbox */}
+      <TouchableOpacity style={styles.dropdown}>
+        <Text style={styles.dropdownText}>📥 Inbox ▼</Text>
+      </TouchableOpacity>
 
-            {/* Botón enviar */}
-            <TouchableOpacity style={styles.sendButton} onPress={addTask}>
-              <Text style={styles.sendArrow}>↑</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {/* Botón enviar */}
+      <TouchableOpacity style={styles.sendButton} onPress={addTask}>
+        <Text style={styles.sendArrow}>↑</Text>
+      </TouchableOpacity>
+    </View>
+  </KeyboardAvoidingView>
+</Modal>
     </View>
   );
 }
