@@ -54,7 +54,7 @@ export default function TodayScreen() {
       setTasks([...tasks, newTask]);
       setNewTaskTitle('');
       setNewTaskDescription('');
-      setModalVisible(false);
+      modalRef.current?.close();
     }
   };
 
@@ -109,19 +109,19 @@ export default function TodayScreen() {
       {/* Add Button */}
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => setModalVisible(true)}
+        onPress={() => modalRef.current?.open()}
       >
         <Plus size={24} color="#ffffff" />
       </TouchableOpacity>
 
-      {/* Modal for adding tasks */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
+      {/* Modalize for adding tasks */}
+      <Portal>
+        <Modalize
+          ref={modalRef}
+          adjustToContentHeight
+          handleStyle={styles.modalHandle}
+          modalStyle={styles.modalStyle}
+        >
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add New Task</Text>
             
@@ -144,7 +144,7 @@ export default function TodayScreen() {
             <View style={styles.modalButtons}>
               <TouchableOpacity 
                 style={styles.cancelButton}
-                onPress={() => setModalVisible(false)}
+                onPress={() => modalRef.current?.close()}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
@@ -158,8 +158,8 @@ export default function TodayScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modalize>
+      </Portal>
     </View>
   );
 }
@@ -283,17 +283,14 @@ const styles = StyleSheet.create({
   },
 
   // MODAL
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+  modalHandle: {
+    backgroundColor: '#d1d5db',
+  },
+  modalStyle: {
+    backgroundColor: '#ffffff',
   },
   modalContent: {
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
     padding: 20,
-    minHeight: 300,
   },
   modalTitle: {
     fontSize: 20,
