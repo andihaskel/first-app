@@ -1,6 +1,6 @@
 import { 
   View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput, 
-  KeyboardAvoidingView, Platform 
+  KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard 
 } from 'react-native';
 import { useState } from 'react';
 import { Plus, Menu, MoreHorizontal, Calendar, Flag, Bell, Inbox } from 'lucide-react-native';
@@ -120,72 +120,78 @@ export default function TodayScreen() {
         animationType="slide"
         transparent
       >
-        <KeyboardAvoidingView
-          style={styles.modalOverlay}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-          <View style={styles.modalSheet}>
+        <TouchableWithoutFeedback onPress={() => setShowAddModal(false)}>
+          <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView
+              style={{ flex: 1, justifyContent: 'flex-end' }}
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+            >
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={styles.modalSheet}>
 
-            {/* Input título */}
-            <TextInput
-              style={styles.titleInput}
-              placeholder="e.g., Replace lightbulb tomorrow at 3pm..."
-              value={newTaskTitle}
-              onChangeText={setNewTaskTitle}
-              autoFocus
-            />
+                  {/* Input título */}
+                  <TextInput
+                    style={styles.titleInput}
+                    placeholder="e.g., Replace lightbulb tomorrow at 3pm..."
+                    value={newTaskTitle}
+                    onChangeText={setNewTaskTitle}
+                    autoFocus
+                  />
 
-            {/* Input descripción */}
-            <TextInput
-              style={styles.descriptionInput}
-              placeholder="Description"
-              value={newTaskDescription}
-              onChangeText={setNewTaskDescription}
-              multiline
-            />
+                  {/* Input descripción */}
+                  <TextInput
+                    style={styles.descriptionInput}
+                    placeholder="Description"
+                    value={newTaskDescription}
+                    onChangeText={setNewTaskDescription}
+                    multiline
+                  />
 
-            {/* Categorías */}
-            <View style={styles.categoryButtons}>
-              <TouchableOpacity style={styles.categoryChip}>
-                <Calendar size={16} color={selectedCategory === 'Today' ? '#0f7b3e' : '#6b7280'} style={{marginRight: 6}} />
-                <Text style={[styles.categoryChipText, selectedCategory === 'Today' && {color: '#0f7b3e'}]}>Today</Text>
-              </TouchableOpacity>
+                  {/* Categorías */}
+                  <View style={styles.categoryButtons}>
+                    <TouchableOpacity style={styles.categoryChip}>
+                      <Calendar size={16} color={selectedCategory === 'Today' ? '#0f7b3e' : '#6b7280'} style={{marginRight: 6}} />
+                      <Text style={[styles.categoryChipText, selectedCategory === 'Today' && {color: '#0f7b3e'}]}>Today</Text>
+                    </TouchableOpacity>
 
-              <TouchableOpacity style={styles.categoryChip}>
-                <Flag size={16} color="#6b7280" style={{marginRight: 6}} />
-                <Text style={styles.categoryChipText}>Priority</Text>
-              </TouchableOpacity>
+                    <TouchableOpacity style={styles.categoryChip}>
+                      <Flag size={16} color="#6b7280" style={{marginRight: 6}} />
+                      <Text style={styles.categoryChipText}>Priority</Text>
+                    </TouchableOpacity>
 
-              <TouchableOpacity style={styles.categoryChip}>
-                <Bell size={16} color="#6b7280" style={{marginRight: 6}} />
-                <Text style={styles.categoryChipText}>Reminders</Text>
-              </TouchableOpacity>
+                    <TouchableOpacity style={styles.categoryChip}>
+                      <Bell size={16} color="#6b7280" style={{marginRight: 6}} />
+                      <Text style={styles.categoryChipText}>Reminders</Text>
+                    </TouchableOpacity>
 
-              <TouchableOpacity style={styles.categoryChip}>
-                <Text style={styles.categoryChipText}>...</Text>
-              </TouchableOpacity>
-            </View>
+                    <TouchableOpacity style={styles.categoryChip}>
+                      <Text style={styles.categoryChipText}>...</Text>
+                    </TouchableOpacity>
+                  </View>
 
-            {/* Separador */}
-            <View style={styles.separator} />
+                  {/* Separador */}
+                  <View style={styles.separator} />
 
-            {/* Selector Inbox + botón enviar en la misma línea */}
-            <View style={styles.bottomRow}>
-              <TouchableOpacity style={styles.dropdown}>
-                <Inbox size={18} color="#6b7280" style={{marginRight: 6}} />
-                <Text style={styles.dropdownText}>Inbox ▼</Text>
-              </TouchableOpacity>
+                  {/* Selector Inbox + botón enviar en la misma línea */}
+                  <View style={styles.bottomRow}>
+                    <TouchableOpacity style={styles.dropdown}>
+                      <Inbox size={18} color="#6b7280" style={{marginRight: 6}} />
+                      <Text style={styles.dropdownText}>Inbox ▼</Text>
+                    </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={[styles.sendButton, !newTaskTitle.trim() && styles.sendButtonDisabled]}
-                onPress={addTask}
-                disabled={!newTaskTitle.trim()}
-              >
-                <Text style={styles.sendArrow}>↑</Text>
-              </TouchableOpacity>
-            </View>
+                    <TouchableOpacity 
+                      style={[styles.sendButton, !newTaskTitle.trim() && styles.sendButtonDisabled]}
+                      onPress={addTask}
+                      disabled={!newTaskTitle.trim()}
+                    >
+                      <Text style={styles.sendArrow}>↑</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
           </View>
-        </KeyboardAvoidingView>
+        </TouchableWithoutFeedback>
       </Modal>
     </View>
   );
