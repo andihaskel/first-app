@@ -1,8 +1,8 @@
 import { 
   View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, 
-  KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback, Keyboard, Animated, Easing 
+  KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback, Keyboard 
 } from 'react-native';
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Plus, Menu, MoreHorizontal, Calendar, Flag, Bell, Inbox } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 
@@ -33,21 +33,6 @@ export default function TodayScreen() {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Today');
-
-  // Animación de overlay
-  const overlayOpacity = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    if (showAddModal) {
-      Animated.timing(overlayOpacity, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-        easing: Easing.out(Easing.ease),
-      }).start();
-    } else {
-      overlayOpacity.setValue(0);
-    }
-  }, [showAddModal]);
 
   const toggleTask = (id: string) => {
     setTasks(tasks.map(task =>
@@ -137,7 +122,7 @@ export default function TodayScreen() {
         onRequestClose={() => setShowAddModal(false)}
       >
         <TouchableWithoutFeedback onPress={() => setShowAddModal(false)}>
-          <Animated.View style={[styles.modalOverlay, { opacity: overlayOpacity }]}>
+          <View style={styles.modalOverlay}>
             <KeyboardAvoidingView
               style={{ flex: 1, justifyContent: 'flex-end' }}
               behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -206,7 +191,7 @@ export default function TodayScreen() {
                 </View>
               </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
-          </Animated.View>
+          </View>
         </TouchableWithoutFeedback>
       </Modal>
     </View>
