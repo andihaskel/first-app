@@ -1,10 +1,11 @@
 import { 
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput, 
-  KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard 
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, 
+  KeyboardAvoidingView, Platform 
 } from 'react-native';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Plus, Menu, MoreHorizontal, Calendar, Flag, Bell, Inbox } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
+import { Modalize } from 'react-native-modalize';
 
 interface Task {
   id: string;
@@ -29,10 +30,11 @@ export default function TodayScreen() {
     }
   ]);
 
-  const [showAddModal, setShowAddModal] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Today');
+
+  const modalizeRef = useRef<Modalize>(null);
 
   const toggleTask = (id: string) => {
     setTasks(tasks.map(task =>
@@ -54,7 +56,7 @@ export default function TodayScreen() {
       setTasks([...tasks, newTask]);
       setNewTaskTitle('');
       setNewTaskDescription('');
-      setShowAddModal(false);
+      modalizeRef.current?.close();
     }
   };
 
@@ -109,90 +111,86 @@ export default function TodayScreen() {
       {/* Add Button */}
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => setShowAddModal(true)}
+        onPress={() => modalizeRef.current?.open()}
       >
         <Plus size={24} color="#ffffff" />
       </TouchableOpacity>
 
-      {/* Add Task Modal */}
-      <Modal
-        visible={showAddModal}
-        animationType="slide"
-        transparent
+      {/* Modalize bottom sheet */}
+      <Modalize
+        ref={modalizeRef}
+        adjustToContentHeight
+        handleStyle={{ display: 'none' }}
+        modalStyle={styles.modalSheet}
+        scrollViewProps={{ keyboardShouldPersistTaps: 'handled' }}
+        keyboardAvoidingBehavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <TouchableWithoutFeedback onPress={() => setShowAddModal(false)}>
-          <View style={styles.modalOverlay}>
-            <KeyboardAvoidingView
-              style={{ flex: 1, justifyContent: 'flex-end' }}
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
-            >
-              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <View style={styles.modalSheet}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <View style={styles.modalContent}>
 
-                  {/* Input título */}
-                  <TextInput
-                    style={styles.titleInput}
-                    placeholder="e.g., Replace lightbulb tomorrow at 3pm..."
-                    value={newTaskTitle}
-                    onChangeText={setNewTaskTitle}
-                    autoFocus
-                  />
+            {/* Input título */}
+            <TextInput
+              style={styles.titleInput}
+              placeholder="e.g., Replace lightbulb tomorrow at 3pm..."
+              value={newTaskTitle}
+              onChangeText={setNewTaskTitle}
+              autoFocus
+            />
 
-                  {/* Input descripción */}
-                  <TextInput
-                    style={styles.descriptionInput}
-                    placeholder="Description"
-                    value={newTaskDescription}
-                    onChangeText={setNewTaskDescription}
-                    multiline
-                  />
+            {/* Input descripción */}
+            <TextInput
+              style={styles.descriptionInput}
+              placeholder="Description"
+              value={newTaskDescription}
+              onChangeText={setNewTaskDescription}
+              multiline
+            />
 
-                  {/* Categorías */}
-                  <View style={styles.categoryButtons}>
-                    <TouchableOpacity style={styles.categoryChip}>
-                      <Calendar size={16} color={selectedCategory === 'Today' ? '#0f7b3e' : '#6b7280'} style={{marginRight: 6}} />
-                      <Text style={[styles.categoryChipText, selectedCategory === 'Today' && {color: '#0f7b3e'}]}>Today</Text>
-                    </TouchableOpacity>
+            {/* Categorías */}
+            <View style={styles.categoryButtons}>
+              <TouchableOpacity style={styles.categoryChip}>
+                <Calendar size={16} color={selectedCategory === 'Today' ? '#0f7b3e' : '#6b7280'} style={{marginRight: 6}} />
+                <Text style={[styles.categoryChipText, selectedCategory === 'Today' && {color: '#0f7b3e'}]}>Today</Text>
+              </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.categoryChip}>
-                      <Flag size={16} color="#6b7280" style={{marginRight: 6}} />
-                      <Text style={styles.categoryChipText}>Priority</Text>
-                    </TouchableOpacity>
+              <TouchableOpacity style={styles.categoryChip}>
+                <Flag size={16} color="#6b7280" style={{marginRight: 6}} />
+                <Text style={styles.categoryChipText}>Priority</Text>
+              </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.categoryChip}>
-                      <Bell size={16} color="#6b7280" style={{marginRight: 6}} />
-                      <Text style={styles.categoryChipText}>Reminders</Text>
-                    </TouchableOpacity>
+              <TouchableOpacity style={styles.categoryChip}>
+                <Bell size={16} color="#6b7280" style={{marginRight: 6}} />
+                <Text style={styles.categoryChipText}>Reminders</Text>
+              </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.categoryChip}>
-                      <Text style={styles.categoryChipText}>...</Text>
-                    </TouchableOpacity>
-                  </View>
+              <TouchableOpacity style={styles.categoryChip}>
+                <Text style={styles.categoryChipText}>...</Text>
+              </TouchableOpacity>
+            </View>
 
-                  {/* Separador */}
-                  <View style={styles.separator} />
+            {/* Separador */}
+            <View style={styles.separator} />
 
-                  {/* Selector Inbox + botón enviar en la misma línea */}
-                  <View style={styles.bottomRow}>
-                    <TouchableOpacity style={styles.dropdown}>
-                      <Inbox size={18} color="#6b7280" style={{marginRight: 6}} />
-                      <Text style={styles.dropdownText}>Inbox ▼</Text>
-                    </TouchableOpacity>
+            {/* Selector Inbox + botón enviar */}
+            <View style={styles.bottomRow}>
+              <TouchableOpacity style={styles.dropdown}>
+                <Inbox size={18} color="#6b7280" style={{marginRight: 6}} />
+                <Text style={styles.dropdownText}>Inbox ▼</Text>
+              </TouchableOpacity>
 
-                    <TouchableOpacity 
-                      style={[styles.sendButton, !newTaskTitle.trim() && styles.sendButtonDisabled]}
-                      onPress={addTask}
-                      disabled={!newTaskTitle.trim()}
-                    >
-                      <Text style={styles.sendArrow}>↑</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </TouchableWithoutFeedback>
-            </KeyboardAvoidingView>
+              <TouchableOpacity 
+                style={[styles.sendButton, !newTaskTitle.trim() && styles.sendButtonDisabled]}
+                onPress={addTask}
+                disabled={!newTaskTitle.trim()}
+              >
+                <Text style={styles.sendArrow}>↑</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+        </KeyboardAvoidingView>
+      </Modalize>
     </View>
   );
 }
@@ -253,19 +251,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25, shadowRadius: 4,
   },
 
-  // MODAL
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-  },
+  // MODALIZE
   modalSheet: {
-    backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    paddingBottom: 40,
   },
+  modalContent: { paddingBottom: 40 },
   titleInput: {
     fontSize: 16,
     fontWeight: '500',
@@ -301,8 +293,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f44336',
     justifyContent: 'center', alignItems: 'center',
   },
-  sendButtonDisabled: {
-    backgroundColor: '#d1d5db'
-  },
+  sendButtonDisabled: { backgroundColor: '#d1d5db' },
   sendArrow: { fontSize: 18, color: '#fff', fontWeight: '600' },
 });
