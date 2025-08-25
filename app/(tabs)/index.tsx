@@ -3,7 +3,7 @@ import {
   KeyboardAvoidingView, Platform 
 } from 'react-native';
 import { useState } from 'react';
-import { Plus, Menu, MoreHorizontal } from 'lucide-react-native';
+import { Plus, Menu, MoreHorizontal, Calendar, Flag, Bell, Inbox } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 
 interface Task {
@@ -34,7 +34,7 @@ export default function TodayScreen() {
       completed: false,
       emoji: '',
       category: 'Today',
-      tag: 'Inbox 📥'
+      tag: 'Inbox'
     }
   ]);
 
@@ -58,7 +58,7 @@ export default function TodayScreen() {
         completed: false,
         emoji: '',
         category: selectedCategory,
-        tag: 'Inbox 📥'
+        tag: 'Inbox'
       };
       setTasks([...tasks, newTask]);
       setNewTaskTitle('');
@@ -125,72 +125,72 @@ export default function TodayScreen() {
 
       {/* Add Task Modal */}
       <Modal
-  visible={showAddModal}
-  animationType="slide"
-  transparent
->
-  <KeyboardAvoidingView
-    style={styles.modalOverlay}
-    behavior={Platform.OS === "ios" ? "padding" : "height"}
-  >
-    <View style={styles.modalSheet}>
+        visible={showAddModal}
+        animationType="slide"
+        transparent
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.modalSheet}>
 
-      {/* Input título */}
-      <TextInput
-        style={styles.titleInput}
-        placeholder="e.g., Replace lightbulb tomorrow at 3pm..."
-        value={newTaskTitle}
-        onChangeText={setNewTaskTitle}
-        autoFocus   // 👈 abre el teclado automáticamente
-      />
+            {/* Input título */}
+            <TextInput
+              style={styles.titleInput}
+              placeholder="e.g., Replace lightbulb tomorrow at 3pm..."
+              value={newTaskTitle}
+              onChangeText={setNewTaskTitle}
+              autoFocus
+            />
 
-      {/* Input descripción */}
-      <TextInput
-        style={styles.descriptionInput}
-        placeholder="Description"
-        value={newTaskDescription}
-        onChangeText={setNewTaskDescription}
-        multiline
-      />
+            {/* Input descripción */}
+            <TextInput
+              style={styles.descriptionInput}
+              placeholder="Description"
+              value={newTaskDescription}
+              onChangeText={setNewTaskDescription}
+              multiline
+            />
 
-      {/* Categorías */}
-      <View style={styles.categoryButtons}>
-        {['Today', 'Priority', 'Reminders'].map((category) => (
-          <TouchableOpacity
-            key={category}
-            style={[
-              styles.categoryButton,
-              selectedCategory === category && styles.categoryButtonSelected
-            ]}
-            onPress={() => setSelectedCategory(category)}
-          >
-            <Text
-              style={[
-                styles.categoryButtonText,
-                selectedCategory === category && styles.categoryButtonTextSelected
-              ]}
-            >
-              {category}
-            </Text>
-          </TouchableOpacity>
-        ))}
-        <TouchableOpacity style={styles.categoryButton}>
-          <Text style={styles.categoryButtonText}>...</Text>
-        </TouchableOpacity>
-      </View>
+            {/* Categorías */}
+            <View style={styles.categoryButtons}>
+              <TouchableOpacity style={[styles.categoryChip, selectedCategory === 'Today' && styles.categoryChipSelected]}>
+                <Calendar size={16} color={selectedCategory === 'Today' ? '#fff' : '#6b7280'} style={{marginRight: 6}} />
+                <Text style={[styles.categoryChipText, selectedCategory === 'Today' && styles.categoryChipTextSelected]}>Today</Text>
+              </TouchableOpacity>
 
-      {/* Selector de Inbox */}
-      <TouchableOpacity style={styles.dropdown}>
-        <Text style={styles.dropdownText}>📥 Inbox ▼</Text>
-      </TouchableOpacity>
+              <TouchableOpacity style={styles.categoryChip}>
+                <Flag size={16} color="#6b7280" style={{marginRight: 6}} />
+                <Text style={styles.categoryChipText}>Priority</Text>
+              </TouchableOpacity>
 
-      {/* Botón enviar */}
-      <TouchableOpacity style={styles.sendButton} onPress={addTask}>
-        <Text style={styles.sendArrow}>↑</Text>
-      </TouchableOpacity>
-    </View>
-  </KeyboardAvoidingView>
-</Modal>
+              <TouchableOpacity style={styles.categoryChip}>
+                <Bell size={16} color="#6b7280" style={{marginRight: 6}} />
+                <Text style={styles.categoryChipText}>Reminders</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.categoryChip}>
+                <Text style={styles.categoryChipText}>...</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Separador */}
+            <View style={styles.separator} />
+
+            {/* Selector de Inbox */}
+            <TouchableOpacity style={styles.dropdown}>
+              <Inbox size={18} color="#6b7280" style={{marginRight: 6}} />
+              <Text style={styles.dropdownText}>Inbox ▼</Text>
+            </TouchableOpacity>
+
+            {/* Botón enviar */}
+            <TouchableOpacity style={styles.sendButton} onPress={addTask}>
+              <Text style={styles.sendArrow}>↑</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -265,25 +265,35 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   titleInput: {
-    fontSize: 16, fontWeight: '500',
-    borderBottomWidth: 1, borderBottomColor: '#e5e7eb',
-    marginBottom: 12, paddingVertical: 8,
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
+    paddingVertical: 6,
+    color: '#111827',
   },
   descriptionInput: {
-    fontSize: 14, color: '#374151',
-    borderBottomWidth: 1, borderBottomColor: '#e5e7eb',
-    marginBottom: 20, paddingVertical: 8,
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 16,
+    paddingVertical: 6,
   },
-  categoryButtons: { flexDirection: 'row', marginBottom: 16 },
-  categoryButton: {
-    paddingHorizontal: 14, paddingVertical: 6,
+  categoryButtons: { flexDirection: 'row', marginBottom: 12 },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12, paddingVertical: 6,
     borderRadius: 16, borderWidth: 1, borderColor: '#d1d5db',
     marginRight: 8,
   },
-  categoryButtonSelected: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
-  categoryButtonText: { fontSize: 14, color: '#374151' },
-  categoryButtonTextSelected: { color: '#fff' },
-  dropdown: { paddingVertical: 10, flexDirection: 'row', alignItems: 'center' },
+  categoryChipSelected: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
+  categoryChipText: { fontSize: 14, color: '#374151' },
+  categoryChipTextSelected: { color: '#fff' },
+  separator: {
+    height: 1,
+    backgroundColor: '#e5e7eb',
+    marginBottom: 12,
+  },
+  dropdown: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
   dropdownText: { fontSize: 15, color: '#374151' },
   sendButton: {
     position: 'absolute', right: 20, bottom: 20,
