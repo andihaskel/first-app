@@ -1,9 +1,9 @@
 import { 
   View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, 
-  Modal, Alert
+  KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback, Keyboard, Animated, Easing 
 } from 'react-native';
-import { useState } from 'react';
-import { Plus, Menu, MoveHorizontal as MoreHorizontal, Calendar, Flag, Bell, Inbox } from 'lucide-react-native';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, Menu, MoreHorizontal, Calendar, Flag, Bell, Inbox } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 
 interface Task {
@@ -29,10 +29,25 @@ export default function TodayScreen() {
     }
   ]);
 
+  const [showAddModal, setShowAddModal] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Today');
-  const [modalVisible, setModalVisible] = useState(false);
+
+  // Animación de overlay
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (showAddModal) {
+      Animated.timing(overlayOpacity, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.ease),
+      }).start();
+    } else {
+      overlayOpacity.setValue(0);
+    }
+  }, [showAddModal]);
 
   const toggleTask = (id: string) => {
     setTasks(tasks.map(task =>
@@ -54,7 +69,7 @@ export default function TodayScreen() {
       setTasks([...tasks, newTask]);
       setNewTaskTitle('');
       setNewTaskDescription('');
-      modalRef.current?.close();
+      setShowAddModal(false);
     }
   };
 
@@ -109,66 +124,97 @@ export default function TodayScreen() {
       {/* Add Button */}
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => modalRef.current?.open()}
+        onPress={() => setShowAddModal(true)}
       >
         <Plus size={24} color="#ffffff" />
       </TouchableOpacity>
 
-      {/* Modalize for adding tasks */}
-      <Portal>
-        <Modalize
-          ref={modalRef}
-          adjustToContentHeight
-          handleStyle={styles.modalHandle}
-          modalStyle={styles.modalStyle}
-        >
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add New Task</Text>
-            
-            <TextInput
-              style={styles.titleInput}
-              placeholder="Task title..."
-              value={newTaskTitle}
-              onChangeText={setNewTaskTitle}
-              autoFocus
-            />
+      {/* Add Task Modal */}
+      <Modal
+        visible={showAddModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowAddModal(false)}>
+          <Animated.View style={[styles.modalOverlay, { opacity: overlayOpacity }]}>
+            <KeyboardAvoidingView
+              style={{ flex: 1, justifyContent: 'flex-end' }}
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+            >
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={styles.modalSheet}>
 
-            <TextInput
-              style={styles.descriptionInput}
-              placeholder="Description"
-              value={newTaskDescription}
-              onChangeText={setNewTaskDescription}
-              multiline
-            />
+                  {/* Input título */}
+                  <TextInput
+                    style={styles.titleInput}
+                    placeholder="e.g., Replace lightbulb tomorrow at 3pm..."
+                    value={newTaskTitle}
+                    onChangeText={setNewTaskTitle}
+                    autoFocus
+                  />
 
-            <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={styles.cancelButton}
-                onPress={() => modalRef.current?.close()}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.addTaskButton, !newTaskTitle.trim() && styles.addTaskButtonDisabled]}
-                onPress={addTask}
-                disabled={!newTaskTitle.trim()}
-              >
-                <Text style={styles.addTaskButtonText}>Add Task</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modalize>
-      </Portal>
+                  {/* Input descripción */}
+                  <TextInput
+                    style={styles.descriptionInput}
+                    placeholder="Description"
+                    value={newTaskDescription}
+                    onChangeText={setNewTaskDescription}
+                    multiline
+                  />
+
+                  {/* Categorías */}
+                  <View style={styles.categoryButtons}>
+                    <TouchableOpacity style={styles.categoryChip}>
+                      <Calendar size={16} color={selectedCategory === 'Today' ? '#0f7b3e' : '#6b7280'} style={{marginRight: 6}} />
+                      <Text style={[styles.categoryChipText, selectedCategory === 'Today' && {color: '#0f7b3e'}]}>Today</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.categoryChip}>
+                      <Flag size={16} color="#6b7280" style={{marginRight: 6}} />
+                      <Text style={styles.categoryChipText}>Priority</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.categoryChip}>
+                      <Bell size={16} color="#6b7280" style={{marginRight: 6}} />
+                      <Text style={styles.categoryChipText}>Reminders</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.categoryChip}>
+                      <Text style={styles.categoryChipText}>...</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Separador */}
+                  <View style={styles.separator} />
+
+                  {/* Selector Inbox + botón enviar */}
+                  <View style={styles.bottomRow}>
+                    <TouchableOpacity style={styles.dropdown}>
+                      <Inbox size={18} color="#6b7280" style={{marginRight: 6}} />
+                      <Text style={styles.dropdownText}>Inbox ▼</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      style={[styles.sendButton, !newTaskTitle.trim() && styles.sendButtonDisabled]}
+                      onPress={addTask}
+                      disabled={!newTaskTitle.trim()}
+                    >
+                      <Text style={styles.sendArrow}>↑</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
+          </Animated.View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#ffffff' 
-  },
+  container: { flex: 1, backgroundColor: '#ffffff' },
 
   // HEADER
   header: {
@@ -182,26 +228,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  headerIcon: { 
-    marginLeft: 20 
-  },
-  title: { 
-    fontSize: 36, 
-    fontFamily: 'Inter-Bold', 
-    color: '#1a1a1a', 
-    marginBottom: 4 
-  },
-  date: { 
-    fontSize: 16, 
-    fontFamily: 'Inter-Medium', 
-    color: '#6b7280' 
-  },
+  headerIcon: { marginLeft: 20 },
+  title: { fontSize: 36, fontWeight: '700', color: '#1a1a1a', marginBottom: 4 },
+  date: { fontSize: 16, fontWeight: '500', color: '#6b7280' },
 
   // TASKS
-  tasksList: { 
-    flex: 1, 
-    paddingHorizontal: 20 
-  },
+  tasksList: { flex: 1, paddingHorizontal: 20 },
   taskItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -210,148 +242,83 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f3f4f6',
   },
   checkbox: {
-    width: 22, 
-    height: 22, 
-    borderRadius: 11,
-    borderWidth: 2, 
-    borderColor: '#d1d5db',
-    marginRight: 16, 
-    marginTop: 2,
-    justifyContent: 'center', 
-    alignItems: 'center',
+    width: 22, height: 22, borderRadius: 11,
+    borderWidth: 2, borderColor: '#d1d5db',
+    marginRight: 16, marginTop: 2,
+    justifyContent: 'center', alignItems: 'center',
   },
-  checkboxCompleted: { 
-    backgroundColor: '#f44336', 
-    borderColor: '#f44336' 
-  },
-  checkmark: { 
-    width: 8, 
-    height: 8, 
-    backgroundColor: '#ffffff', 
-    borderRadius: 4 
-  },
-  taskContent: { 
-    flex: 1 
-  },
-  taskHeader: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center' 
-  },
-  taskTitle: { 
-    fontSize: 16, 
-    fontFamily: 'Inter-SemiBold', 
-    color: '#1a1a1a', 
-    flex: 1 
-  },
-  taskTitleCompleted: { 
-    textDecorationLine: 'line-through', 
-    color: '#9ca3af' 
-  },
-  taskTag: { 
-    fontSize: 13, 
-    color: '#6b7280', 
-    marginLeft: 8 
-  },
-  taskDescription: { 
-    fontSize: 14, 
-    fontFamily: 'Inter-Regular',
-    color: '#6b7280', 
-    marginTop: 2 
-  },
-  taskDescriptionCompleted: { 
-    textDecorationLine: 'line-through', 
-    color: '#9ca3af' 
-  },
+  checkboxCompleted: { backgroundColor: '#f44336', borderColor: '#f44336' },
+  checkmark: { width: 8, height: 8, backgroundColor: '#ffffff', borderRadius: 4 },
+  taskContent: { flex: 1 },
+  taskHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  taskTitle: { fontSize: 16, fontWeight: '600', color: '#1a1a1a', flex: 1 },
+  taskTitleCompleted: { textDecorationLine: 'line-through', color: '#9ca3af' },
+  taskTag: { fontSize: 13, color: '#6b7280', marginLeft: 8 },
+  taskDescription: { fontSize: 14, color: '#6b7280', marginTop: 2 },
+  taskDescriptionCompleted: { textDecorationLine: 'line-through', color: '#9ca3af' },
 
   // FAB
   addButton: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 80,
     right: 20,
-    width: 56, 
-    height: 56, 
-    borderRadius: 28,
+    width: 56, height: 56, borderRadius: 28,
     backgroundColor: '#f44336',
-    justifyContent: 'center', 
-    alignItems: 'center',
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25, 
-    shadowRadius: 4,
-    elevation: 5,
+    justifyContent: 'center', alignItems: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25, shadowRadius: 4,
   },
 
   // MODAL
-  modalHandle: {
-    backgroundColor: '#d1d5db',
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
-  modalStyle: {
-    backgroundColor: '#ffffff',
-  },
-  modalContent: {
+  modalSheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     padding: 20,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontFamily: 'Inter-Bold',
-    color: '#1a1a1a',
-    marginBottom: 20,
-    textAlign: 'center',
+    paddingBottom: 40,
   },
   titleInput: {
     fontSize: 16,
-    fontFamily: 'Inter-Medium',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
+    fontWeight: '500',
+    marginBottom: 8,
+    paddingVertical: 6,
     color: '#111827',
   },
   descriptionInput: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 20,
-    minHeight: 80,
-    textAlignVertical: 'top',
     color: '#6b7280',
+    marginBottom: 16,
+    paddingVertical: 6,
   },
-  modalButtons: {
+  categoryButtons: { flexDirection: 'row', marginBottom: 12 },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10, paddingVertical: 6,
+    borderRadius: 8, borderWidth: 1, borderColor: '#d1d5db',
+    marginRight: 8,
+  },
+  categoryChipText: { fontSize: 14, color: '#374151' },
+  separator: { height: 1, backgroundColor: '#e5e7eb', marginBottom: 12 },
+  bottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12,
+    alignItems: 'center'
   },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
-    color: '#6b7280',
-  },
-  addTaskButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
+  dropdown: { flexDirection: 'row', alignItems: 'center' },
+  dropdownText: { fontSize: 15, color: '#374151' },
+  sendButton: {
+    width: 44, height: 44, borderRadius: 22,
     backgroundColor: '#f44336',
-    alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center',
   },
-  addTaskButtonDisabled: {
-    backgroundColor: '#d1d5db',
+  sendButtonDisabled: {
+    backgroundColor: '#d1d5db'
   },
-  addTaskButtonText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
-    color: '#ffffff',
-  },
+  sendArrow: { fontSize: 18, color: '#fff', fontWeight: '600' },
 });
