@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput, Alert } from 'react-native';
 import { useState } from 'react';
-import { Plus, Menu, MoreHorizontal } from 'lucide-react-native';
+import { Plus, Menu, MoveHorizontal as MoreHorizontal } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { useSharedValue, useAnimatedStyle, useAnimatedGestureHandler, withSpring, runOnJS } from 'react-native-reanimated';
 import { PanGestureHandler } from 'react-native-gesture-handler';
