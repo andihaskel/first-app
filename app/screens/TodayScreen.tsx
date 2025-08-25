@@ -1,9 +1,9 @@
 import { 
   View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, 
   KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback, Keyboard,
-  Dimensions, Alert
+  Dimensions, Animated 
 } from 'react-native';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Plus, Menu, MoveHorizontal as MoreHorizontal, Calendar, Flag, Bell, Inbox } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 
@@ -29,6 +29,15 @@ export default function TodayScreen() {
       emoji: '💻👨‍💼',
       category: 'Today',
       tag: 'Home 🏠 #'
+    },
+    {
+      id: '2',
+      title: 'surf',
+      description: 'Ir a surfear a la tarde',
+      completed: false,
+      emoji: '',
+      category: 'Today',
+      tag: 'Inbox'
     }
   ]);
 
@@ -36,11 +45,57 @@ export default function TodayScreen() {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Today');
+  const [showUndo, setShowUndo] = useState(false);
+  const [lastCompleted, setLastCompleted] = useState<Task | null>(null);
+
+  const undoAnim = useRef(new Animated.Value(0)).current; // para animar Undo
 
   const toggleTask = (id: string) => {
-    setTasks(tasks.map(task =>
+    const updatedTasks = tasks.map(task =>
       task.id === id ? { ...task, completed: !task.completed } : task
-    ));
+    );
+
+    const completedTask = updatedTasks.find(t => t.id === id && t.completed);
+    if (completedTask) {
+      setLastCompleted(completedTask);
+      showUndoBar();
+    }
+
+    setTasks(updatedTasks);
+  };
+
+  const showUndoBar = () => {
+    setShowUndo(true);
+    Animated.timing(undoAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+
+    // ocultar después de 3 segundos
+    setTimeout(() => {
+      hideUndoBar();
+    }, 3000);
+  };
+
+  const hideUndoBar = () => {
+    Animated.timing(undoAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowUndo(false);
+      setLastCompleted(null);
+    });
+  };
+
+  const handleUndo = () => {
+    if (lastCompleted) {
+      setTasks(tasks.map(t => 
+        t.id === lastCompleted.id ? { ...t, completed: false } : t
+      ));
+    }
+    hideUndoBar();
   };
 
   const addTask = () => {
@@ -85,7 +140,9 @@ export default function TodayScreen() {
 
       {/* Tasks List */}
       <ScrollView style={styles.tasksList} showsVerticalScrollIndicator={false}>
-        {tasks.map((task) => (
+        {tasks
+          .filter((task) => !task.completed) // ocultar completadas
+          .map((task) => (
           <View key={task.id} style={styles.taskItem}>
             <TouchableOpacity
               style={[styles.checkbox, task.completed && styles.checkboxCompleted]}
@@ -109,13 +166,34 @@ export default function TodayScreen() {
         ))}
       </ScrollView>
 
-      {/* Add Button */}
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => setShowAddModal(true)}
-      >
-        <Plus size={24} color="#ffffff" />
-      </TouchableOpacity>
+      {/* BottomBar con Undo + FAB */}
+      <View style={styles.bottomBar}>
+        {showUndo && (
+          <Animated.View 
+            style={[
+              styles.undoContainer,
+              {
+                opacity: undoAnim,
+                transform: [
+                  { translateX: undoAnim.interpolate({ inputRange: [0,1], outputRange: [200, 0] }) }
+                ]
+              }
+            ]}
+          >
+            <TouchableOpacity onPress={handleUndo}>
+              <Text style={styles.undoText}>Undo</Text>
+              <Text style={styles.undoSubText}>Completed</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => setShowAddModal(true)}
+        >
+          <Plus size={24} color="#ffffff" />
+        </TouchableOpacity>
+      </View>
 
       {/* Add Task Modal */}
       <Modal
@@ -205,17 +283,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
 
   // HEADER
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
+  header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 12 },
+  headerTop: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 12 },
   headerIcon: { marginLeft: 20 },
   title: { fontSize: 36, fontWeight: '700', color: '#1a1a1a', marginBottom: 4 },
   date: { fontSize: 16, fontWeight: '500', color: '#6b7280' },
@@ -245,15 +314,37 @@ const styles = StyleSheet.create({
   taskDescription: { fontSize: 14, color: '#6b7280', marginTop: 2 },
   taskDescriptionCompleted: { textDecorationLine: 'line-through', color: '#9ca3af' },
 
+  // BOTTOM BAR
+  bottomBar: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  undoContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  undoText: { color: '#dc2626', fontWeight: '600', fontSize: 16 },
+  undoSubText: { color: '#6b7280', fontSize: 12 },
+
   // FAB
   addButton: {
-    position: 'absolute',
-    bottom: 80,
-    right: 20,
     width: 56, height: 56, borderRadius: 28,
     backgroundColor: '#f44336',
     justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25, shadowRadius: 4,
   },
 
