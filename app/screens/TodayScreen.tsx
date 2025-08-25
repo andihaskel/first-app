@@ -168,32 +168,32 @@ export default function TodayScreen() {
 
       {/* BottomBar con Undo + FAB */}
       <View style={styles.bottomBar}>
-        {showUndo && (
-          <Animated.View 
-            style={[
-              styles.undoContainer,
-              {
-                opacity: undoAnim,
-                transform: [
-                  { translateX: undoAnim.interpolate({ inputRange: [0,1], outputRange: [200, 0] }) }
-                ]
-              }
-            ]}
-          >
-            <TouchableOpacity onPress={handleUndo}>
-              <Text style={styles.undoText}>Undo</Text>
-              <Text style={styles.undoSubText}>Completed</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
+  {showUndo && (
+    <Animated.View 
+      style={[
+        styles.undoContainer,
+        {
+          opacity: undoAnim,
+          transform: [
+            { translateX: undoAnim.interpolate({ inputRange: [0,1], outputRange: [200, 0] }) }
+          ]
+        }
+      ]}
+    >
+      <TouchableOpacity onPress={handleUndo}>
+        <Text style={styles.undoText}>Undo</Text>
+        <Text style={styles.undoSubText}>Completed</Text>
+      </TouchableOpacity>
+    </Animated.View>
+  )}
 
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setShowAddModal(true)}
-        >
-          <Plus size={24} color="#ffffff" />
-        </TouchableOpacity>
-      </View>
+  <TouchableOpacity
+    style={styles.addButton}
+    onPress={() => setShowAddModal(true)}
+  >
+    <Plus size={24} color="#ffffff" />
+  </TouchableOpacity>
+</View>
 
       {/* Add Task Modal */}
       <Modal
@@ -316,37 +316,39 @@ const styles = StyleSheet.create({
 
   // BOTTOM BAR
   bottomBar: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  undoContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginRight: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  undoText: { color: '#dc2626', fontWeight: '600', fontSize: 16 },
-  undoSubText: { color: '#6b7280', fontSize: 12 },
+  position: 'absolute',
+  bottom: 20,
+  left: 20,
+  right: 20,
+  flexDirection: 'row',
+  alignItems: 'center',
+},
 
-  // FAB
-  addButton: {
-    width: 56, height: 56, borderRadius: 28,
-    backgroundColor: '#f44336',
-    justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25, shadowRadius: 4,
-  },
+undoContainer: {
+  flex: 1, // ocupa todo el espacio libre
+  backgroundColor: '#fff',
+  borderRadius: 12,
+  paddingVertical: 10,
+  paddingHorizontal: 16,
+  marginRight: 16, // deja espacio antes del FAB
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+},
+
+addButton: {
+  width: 56,
+  height: 56,
+  borderRadius: 28,
+  backgroundColor: '#f44336',
+  justifyContent: 'center',
+  alignItems: 'center',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.25,
+  shadowRadius: 4,
+},
 
   // MODAL
   modalOverlay: {
