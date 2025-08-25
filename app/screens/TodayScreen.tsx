@@ -1,14 +1,13 @@
 import { 
   View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, 
   KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback, Keyboard,
-  Dimensions
+  Dimensions, Alert
 } from 'react-native';
 import { useState } from 'react';
 import { Plus, Menu, MoveHorizontal as MoreHorizontal, Calendar, Flag, Bell, Inbox } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 
 const { width } = Dimensions.get('window');
-const isWeb = Platform.OS === 'web';
 
 interface Task {
   id: string;
@@ -122,10 +121,10 @@ export default function TodayScreen() {
       <Modal
         visible={showAddModal}
         animationType="slide"
-        transparent={!isWeb}
+        transparent={true}
         onRequestClose={() => setShowAddModal(false)}
       >
-        <TouchableWithoutFeedback onPress={isWeb ? undefined : () => setShowAddModal(false)}>
+        <TouchableWithoutFeedback onPress={() => setShowAddModal(false)}>
           <View style={styles.modalOverlay}>
             <KeyboardAvoidingView
               style={{ flex: 1, justifyContent: 'flex-end' }}
@@ -262,15 +261,15 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: isWeb ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   modalSheet: {
     backgroundColor: '#fff',
-    borderTopLeftRadius: isWeb ? 0 : 20,
-    borderTopRightRadius: isWeb ? 0 : 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     padding: 20,
     paddingBottom: 40,
-    maxWidth: isWeb ? 500 : width,
+    maxWidth: width,
     alignSelf: 'center',
     width: '100%',
   },
