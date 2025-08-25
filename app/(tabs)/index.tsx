@@ -26,15 +26,6 @@ export default function TodayScreen() {
       emoji: '💻👨‍💼',
       category: 'Today',
       tag: 'Home 🏠 #'
-    },
-    {
-      id: '2',
-      title: 'surf',
-      description: 'Ir a surfear a la tarde',
-      completed: false,
-      emoji: '',
-      category: 'Today',
-      tag: 'Inbox'
     }
   ]);
 
@@ -155,9 +146,9 @@ export default function TodayScreen() {
 
             {/* Categorías */}
             <View style={styles.categoryButtons}>
-              <TouchableOpacity style={[styles.categoryChip, selectedCategory === 'Today' && styles.categoryChipSelected]}>
-                <Calendar size={16} color={selectedCategory === 'Today' ? '#fff' : '#6b7280'} style={{marginRight: 6}} />
-                <Text style={[styles.categoryChipText, selectedCategory === 'Today' && styles.categoryChipTextSelected]}>Today</Text>
+              <TouchableOpacity style={styles.categoryChip}>
+                <Calendar size={16} color={selectedCategory === 'Today' ? '#0f7b3e' : '#6b7280'} style={{marginRight: 6}} />
+                <Text style={[styles.categoryChipText, selectedCategory === 'Today' && {color: '#0f7b3e'}]}>Today</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.categoryChip}>
@@ -178,16 +169,21 @@ export default function TodayScreen() {
             {/* Separador */}
             <View style={styles.separator} />
 
-            {/* Selector de Inbox */}
-            <TouchableOpacity style={styles.dropdown}>
-              <Inbox size={18} color="#6b7280" style={{marginRight: 6}} />
-              <Text style={styles.dropdownText}>Inbox ▼</Text>
-            </TouchableOpacity>
+            {/* Selector Inbox + botón enviar en la misma línea */}
+            <View style={styles.bottomRow}>
+              <TouchableOpacity style={styles.dropdown}>
+                <Inbox size={18} color="#6b7280" style={{marginRight: 6}} />
+                <Text style={styles.dropdownText}>Inbox ▼</Text>
+              </TouchableOpacity>
 
-            {/* Botón enviar */}
-            <TouchableOpacity style={styles.sendButton} onPress={addTask}>
-              <Text style={styles.sendArrow}>↑</Text>
-            </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.sendButton, !newTaskTitle.trim() && styles.sendButtonDisabled]}
+                onPress={addTask}
+                disabled={!newTaskTitle.trim()}
+              >
+                <Text style={styles.sendArrow}>↑</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -229,7 +225,7 @@ const styles = StyleSheet.create({
     marginRight: 16, marginTop: 2,
     justifyContent: 'center', alignItems: 'center',
   },
-  checkboxCompleted: { backgroundColor: '#dc2626', borderColor: '#dc2626' },
+  checkboxCompleted: { backgroundColor: '#f44336', borderColor: '#f44336' },
   checkmark: { width: 8, height: 8, backgroundColor: '#ffffff', borderRadius: 4 },
   taskContent: { flex: 1 },
   taskHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
@@ -245,7 +241,7 @@ const styles = StyleSheet.create({
     bottom: 80,
     right: 20,
     width: 56, height: 56, borderRadius: 28,
-    backgroundColor: '#dc2626',
+    backgroundColor: '#f44336',
     justifyContent: 'center', alignItems: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25, shadowRadius: 4,
@@ -262,7 +258,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    paddingBottom: 80,
+    paddingBottom: 40,
   },
   titleInput: {
     fontSize: 16,
@@ -281,25 +277,26 @@ const styles = StyleSheet.create({
   categoryChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12, paddingVertical: 6,
-    borderRadius: 16, borderWidth: 1, borderColor: '#d1d5db',
+    paddingHorizontal: 10, paddingVertical: 6,
+    borderRadius: 8, borderWidth: 1, borderColor: '#d1d5db',
     marginRight: 8,
   },
-  categoryChipSelected: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
   categoryChipText: { fontSize: 14, color: '#374151' },
-  categoryChipTextSelected: { color: '#fff' },
-  separator: {
-    height: 1,
-    backgroundColor: '#e5e7eb',
-    marginBottom: 12,
+  separator: { height: 1, backgroundColor: '#e5e7eb', marginBottom: 12 },
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
   },
-  dropdown: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
+  dropdown: { flexDirection: 'row', alignItems: 'center' },
   dropdownText: { fontSize: 15, color: '#374151' },
   sendButton: {
-    position: 'absolute', right: 20, bottom: 20,
     width: 44, height: 44, borderRadius: 22,
-    backgroundColor: '#dc2626',
+    backgroundColor: '#f44336',
     justifyContent: 'center', alignItems: 'center',
+  },
+  sendButtonDisabled: {
+    backgroundColor: '#d1d5db'
   },
   sendArrow: { fontSize: 18, color: '#fff', fontWeight: '600' },
 });
