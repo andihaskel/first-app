@@ -3,11 +3,11 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "android": "bash -c 'npx react-native run-android'",
-    "ios": "bash -c 'npx react-native run-ios'",
-    "lint": "bash -c 'eslint .'",
-    "start": "bash -c 'npx react-native start'",
-    "test": "bash -c 'jest'"
+    "android": "npx react-native run-android",
+    "ios": "npx react-native run-ios", 
+    "lint": "eslint .",
+    "start": "npx react-native start --reset-cache",
+    "test": "jest"
   },
   "dependencies": {
     "react": "18.2.0",
