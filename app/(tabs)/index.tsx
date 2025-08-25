@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput } from 'react-native';
 import { useState } from 'react';
-import { Plus, Menu, MoreHorizontal } from 'lucide-react-native';
+import { Plus, Menu, MoveHorizontal as MoreHorizontal } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 
 interface Task {
