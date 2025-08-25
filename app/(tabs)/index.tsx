@@ -3,7 +3,7 @@ import {
   KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback, Keyboard 
 } from 'react-native';
 import { useState } from 'react';
-import { Plus, Menu, MoreHorizontal, Calendar, Flag, Bell, Inbox } from 'lucide-react-native';
+import { Plus, Menu, MoveHorizontal as MoreHorizontal, Calendar, Flag, Bell, Inbox } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 
 interface Task {
