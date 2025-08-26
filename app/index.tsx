@@ -8,8 +8,46 @@ export default function SplashScreen() {
   const [countdown, setCountdown] = useState(3);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const [countdown, setCountdown] = useState(3);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
   useEffect(() => {
+    // Start fade in animation
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Countdown timer
+    const countdownInterval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(countdownInterval);
+          // Fade out animation before navigation
+          Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: true,
+          }).start(() => {
+            router.replace('/screens/TodayScreen');
+          });
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // Cleanup timer
     // Start fade in animation
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -51,6 +89,7 @@ export default function SplashScreen() {
 
     return () => {
       clearInterval(countdownInterval);
+      clearInterval(countdownInterval);
       clearTimeout(navigationTimer);
     };
   }, []);
@@ -58,6 +97,19 @@ export default function SplashScreen() {
   return (
     <View style={styles.container}>
       <Animated.View 
+        style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ scale: scaleAnim }]
+          }
+        ]}
+      >
+        {countdown > 0 && (
+          <Text style={styles.countdown}>{countdown}</Text>
+        )}
+        <Text style={styles.message}>Focus on what matters first</Text>
+      </Animated.View>
         style={[
           styles.content,
           {
@@ -82,6 +134,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
+  },
+  content: {
+    alignItems: 'center',
+  },
+  countdown: {
+    fontSize: 48,
+    fontFamily: 'Inter-Bold',
+    color: '#f97316',
+    marginBottom: 20,
+    textAlign: 'center',
   },
   content: {
     alignItems: 'center',
