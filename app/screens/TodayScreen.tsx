@@ -4,7 +4,7 @@ import {
   Dimensions, Animated
 } from 'react-native';
 import { useState, useRef } from 'react';
-import { Plus, TrendingUp, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, ChevronRight } from 'lucide-react-native';
+import { Plus, TrendingUp, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, ChevronRight, Check } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
@@ -15,6 +15,7 @@ interface Task {
   title: string;
   description: string;
   completed: boolean;
+  isCompleting?: boolean;
   emoji: string;
   category: string;
   tag: string;
@@ -62,28 +63,36 @@ export default function TodayScreen() {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 
-    setTasks(tasks.filter(t => t.id !== id));
-    setLastCompleted(task);
+    // First, mark as completing (orange with white check)
+    setTasks(prev => prev.map(t => 
+      t.id === id ? { ...t, isCompleting: true } : t
+    ));
 
-    setShowUndo(true);
-    Animated.timing(undoAnim, {
-      toValue: 1,
-      duration: 250,
-      useNativeDriver: true,
-    }).start();
+    // After 500ms, remove the task and show undo
+    setTimeout(() => {
+      setTasks(prev => prev.filter(t => t.id !== id));
+      setLastCompleted(task);
 
-    undoTimer = setTimeout(() => {
+      setShowUndo(true);
       Animated.timing(undoAnim, {
-        toValue: 0,
+        toValue: 1,
         duration: 250,
         useNativeDriver: true,
-      }).start(() => setShowUndo(false));
-    }, 3000);
+      }).start();
+
+      undoTimer = setTimeout(() => {
+        Animated.timing(undoAnim, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+        }).start(() => setShowUndo(false));
+      }, 3000);
+    }, 500);
   };
 
   const handleUndo = () => {
     if (lastCompleted) {
-      setTasks(prev => [...prev, lastCompleted]);
+      setTasks(prev => [...prev, { ...lastCompleted, isCompleting: false }]);
       setLastCompleted(null);
     }
     clearTimeout(undoTimer);
@@ -158,10 +167,16 @@ export default function TodayScreen() {
               {/* Checkbox + Title */}
               <View style={styles.row}>
                 <TouchableOpacity
-                  style={[styles.checkbox, task.completed && styles.checkboxCompleted]}
+                  style={[
+                    styles.checkbox, 
+                    task.completed && styles.checkboxCompleted,
+                    task.isCompleting && styles.checkboxCompleting
+                  ]}
                   onPress={() => toggleTask(task.id)}
                 >
-                  {task.completed && <View style={styles.checkmark} />}
+                  {(task.completed || task.isCompleting) && (
+                    <Check size={12} color="#ffffff" strokeWidth={3} />
+                  )}
                 </TouchableOpacity>
                 <Text style={[styles.taskTitle, task.completed && styles.taskTitleCompleted]}>
                   {task.title} {task.emoji}
@@ -377,6 +392,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   checkboxCompleted: { backgroundColor: '#f44336', borderColor: '#f44336' },
+  checkboxCompleting: { backgroundColor: '#f97316', borderColor: '#f97316' },
   checkmark: { width: 8, height: 8, backgroundColor: '#ffffff', borderRadius: 4 },
   taskTitle: { fontSize: 16, fontWeight: '600', color: '#1a1a1a' },
   taskTitleCompleted: { textDecorationLine: 'line-through', color: '#9ca3af' },
