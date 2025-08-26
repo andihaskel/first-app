@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Calendar, Search, Grid3X3, Clock } from 'lucide-react-native';
+import { Calendar, Search, Grid3x2 as Grid3X3, Clock } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
