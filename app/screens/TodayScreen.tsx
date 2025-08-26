@@ -29,7 +29,7 @@ export default function TodayScreen() {
       description: 'Trabajar',
       completed: false,
       emoji: '💻👨‍💼',
-      category: 'Today',
+      category: 'You got this',
       tag: 'Home 🏠'
     },
     {
