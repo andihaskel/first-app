@@ -155,7 +155,7 @@ export default function TodayScreen() {
   };
 
   const handleContinue = () => {
-    console.log('Continue to app pressed');
+    router.push('/(tabs)');
   };
 
   const formatDate = () => {
