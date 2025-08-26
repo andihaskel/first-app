@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   flexDirection: 'row',
   justifyContent: 'space-between',
   alignItems: 'center',
-  marginTop: 12,  
+  marginTop: 10,  
 },
   dropdownText: { fontSize: 15, color: '#374151' },
   sendButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f44336', justifyContent: 'center', alignItems: 'center' },
