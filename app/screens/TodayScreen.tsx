@@ -123,7 +123,8 @@ export default function TodayScreen() {
   };
 
   const handleContinue = () => {
-    router.push('/main');
+    // Navigate to main functionality or stay in current screen
+    console.log('Continue pressed');
   };
 
   const formatDate = () => {
