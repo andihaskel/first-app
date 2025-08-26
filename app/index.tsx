@@ -71,13 +71,13 @@ export default function SplashScreen() {
         // Change message with fade animation
         Animated.timing(messageFadeAnim, {
           toValue: 0,
-          duration: 200,
+          duration: 400,
           useNativeDriver: true,
         }).start(() => {
           setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % messages.length);
           Animated.timing(messageFadeAnim, {
             toValue: 1,
-            duration: 200,
+            duration: 400,
             useNativeDriver: true,
           }).start();
         });
