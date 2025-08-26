@@ -336,7 +336,7 @@ export default function TodayScreen() {
               </KeyboardAvoidingView>
             </TouchableWithoutFeedback>
           </View>
-        </TouchableWithoutFeedback>
+      <Text style={styles.quote}>"One day or day one. You decide."</Text>
       </Modal>
     </View>
   );
@@ -363,6 +363,7 @@ const styles = StyleSheet.create({
     color: '#f97316',
   },
   title: { fontSize: 36, fontWeight: '700', color: '#1a1a1a', marginBottom: 4 },
+  quote: { fontSize: 18, fontStyle: 'italic', color: '#6b7280', marginBottom: 4 },
   date: { fontSize: 16, fontWeight: '500', color: '#6b7280' },
 
   // TASKS
