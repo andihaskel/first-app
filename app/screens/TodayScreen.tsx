@@ -354,6 +354,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#f97316',
+    borderWidth: 1,
+    borderColor: '#f97316',
   },
   continueButtonText: {
     fontSize: 14,
