@@ -146,7 +146,7 @@ export default function TodayScreen() {
             <Text style={styles.continueButtonText}>Continue to app →</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.title}>Today</Text>
+        <Text style={styles.title}>One day or day one. You decide.</Text>
         <Text style={styles.date}>{formatDate()}</Text>
       </View>
 
