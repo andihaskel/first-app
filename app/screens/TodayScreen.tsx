@@ -29,7 +29,7 @@ export default function TodayScreen() {
       description: 'Trabajar',
       completed: false,
       emoji: '💻👨‍💼',
-      category: 'You got this',
+      category: 'Today',
       tag: 'Home 🏠'
     },
     {
@@ -146,7 +146,7 @@ export default function TodayScreen() {
             <Text style={styles.continueButtonText}>Continue to app →</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.title}>Today</Text>
+        <Text style={styles.title}>Let's get things done</Text>
         <Text style={styles.date}>{formatDate()}</Text>
       </View>
 
