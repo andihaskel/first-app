@@ -71,19 +71,6 @@ export default function SplashScreen() {
         )}
         <Text style={styles.message}>Focus on what matters first</Text>
       </Animated.View>
-        style={[
-          styles.content,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }]
-          }
-        ]}
-      >
-        {countdown > 0 && (
-          <Text style={styles.countdown}>{countdown}</Text>
-        )}
-        <Text style={styles.message}>Focus on what matters first</Text>
-      </Animated.View>
     </View>
   );
 }
