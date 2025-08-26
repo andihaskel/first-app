@@ -3,7 +3,7 @@ import {
   KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback, Keyboard,
   Dimensions, Animated
 } from 'react-native';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Plus, TrendingUp, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, ChevronRight, Check } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
@@ -16,6 +16,8 @@ interface Task {
   description: string;
   completed: boolean;
   isCompleting?: boolean;
+  slideAnim?: Animated.Value;
+  fadeAnim?: Animated.Value;
   emoji: string;
   category: string;
   tag: string;
@@ -44,6 +46,14 @@ export default function TodayScreen() {
     }
   ]);
 
+  // Initialize animations for existing tasks
+  useEffect(() => {
+    setTasks(prev => prev.map(task => ({
+      ...task,
+      slideAnim: task.slideAnim || new Animated.Value(0),
+      fadeAnim: task.fadeAnim || new Animated.Value(1)
+    })));
+  }, []);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
@@ -68,31 +78,53 @@ export default function TodayScreen() {
       t.id === id ? { ...t, isCompleting: true } : t
     ));
 
-    // After 500ms, remove the task and show undo
+    // After 500ms, start slide up and fade out animation
     setTimeout(() => {
-      setTasks(prev => prev.filter(t => t.id !== id));
-      setLastCompleted(task);
+      if (task.slideAnim && task.fadeAnim) {
+        Animated.parallel([
+          Animated.timing(task.slideAnim, {
+            toValue: -100,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(task.fadeAnim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+          })
+        ]).start(() => {
+          // Remove task after animation completes
+          setTasks(prev => prev.filter(t => t.id !== id));
+          setLastCompleted(task);
 
-      setShowUndo(true);
-      Animated.timing(undoAnim, {
-        toValue: 1,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
+          setShowUndo(true);
+          Animated.timing(undoAnim, {
+            toValue: 1,
+            duration: 250,
+            useNativeDriver: true,
+          }).start();
 
-      undoTimer = setTimeout(() => {
-        Animated.timing(undoAnim, {
-          toValue: 0,
-          duration: 250,
-          useNativeDriver: true,
-        }).start(() => setShowUndo(false));
-      }, 3000);
+          undoTimer = setTimeout(() => {
+            Animated.timing(undoAnim, {
+              toValue: 0,
+              duration: 250,
+              useNativeDriver: true,
+            }).start(() => setShowUndo(false));
+          }, 3000);
+        });
+      }
     }, 500);
   };
 
   const handleUndo = () => {
     if (lastCompleted) {
-      setTasks(prev => [...prev, { ...lastCompleted, isCompleting: false }]);
+      const restoredTask = {
+        ...lastCompleted,
+        isCompleting: false,
+        slideAnim: new Animated.Value(0),
+        fadeAnim: new Animated.Value(1)
+      };
+      setTasks(prev => [...prev, restoredTask]);
       setLastCompleted(null);
     }
     clearTimeout(undoTimer);
@@ -112,7 +144,9 @@ export default function TodayScreen() {
         completed: false,
         emoji: '',
         category: selectedCategory,
-        tag: 'Inbox 📥'
+        tag: 'Inbox 📥',
+        slideAnim: new Animated.Value(0),
+        fadeAnim: new Animated.Value(1)
       };
       setTasks([...tasks, newTask]);
       setNewTaskTitle('');
@@ -162,8 +196,17 @@ export default function TodayScreen() {
       {/* Tasks List */}
       <ScrollView style={styles.tasksList} showsVerticalScrollIndicator={false}>
         {tasks.map((task) => (
-          <TouchableOpacity key={task.id} onPress={() => openTaskDetail(task)}>
-            <View style={styles.taskItem}>
+          <Animated.View
+            key={task.id}
+            style={[
+              styles.taskItem,
+              {
+                transform: [{ translateY: task.slideAnim || 0 }],
+                opacity: task.fadeAnim || 1
+              }
+            ]}
+          >
+            <TouchableOpacity onPress={() => openTaskDetail(task)}>
               {/* Checkbox + Title */}
               <View style={styles.row}>
                 <TouchableOpacity
@@ -195,8 +238,8 @@ export default function TodayScreen() {
 
               {/* Separator */}
               <View style={styles.separator} />
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </Animated.View>
         ))}
       </ScrollView>
 
