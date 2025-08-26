@@ -57,28 +57,32 @@ export default function SplashScreen() {
       setCountdown(prev => {
         if (prev <= 1) {
           clearInterval(countdownInterval);
-          // Fade out animation before navigation
-          Animated.timing(fadeAnim, {
-            toValue: 0,
-            duration: 500,
-            useNativeDriver: true,
-          }).start(() => {
-            router.replace('/screens/TodayScreen');
-          });
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
 
+    // Fade out animation after countdown finishes
+    const fadeOutTimer = setTimeout(() => {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }).start(() => {
+        router.replace('/screens/TodayScreen');
+      });
+    }, 3000);
+
     // Cleanup timer
-    const navigationTimer = setTimeout(() => {
+    const fallbackTimer = setTimeout(() => {
       router.replace('/screens/TodayScreen');
-    }, 3500);
+    }, 4000);
 
     return () => {
       clearInterval(countdownInterval);
-      clearTimeout(navigationTimer);
+      clearTimeout(fadeOutTimer);
+      clearTimeout(fallbackTimer);
     };
   }, []);
 
