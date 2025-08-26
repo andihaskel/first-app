@@ -4,7 +4,7 @@ import {
   Dimensions, Animated
 } from 'react-native';
 import { useState, useRef } from 'react';
-import { Plus, Menu, MoveHorizontal as MoreHorizontal, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, ChevronRight } from 'lucide-react-native';
+import { Plus, BarChart3, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, ChevronRight } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
@@ -123,8 +123,7 @@ export default function TodayScreen() {
   };
 
   const handleContinue = () => {
-    // Navigate to main functionality or stay in current screen
-    console.log('Continue pressed');
+    console.log('Continue to app pressed');
   };
 
   const formatDate = () => {
@@ -142,8 +141,10 @@ export default function TodayScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <Menu size={24} color="#dc2626" style={styles.headerIcon} />
-          <MoreHorizontal size={24} color="#dc2626" style={styles.headerIcon} />
+          <BarChart3 size={24} color="#f97316" />
+          <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
+            <Text style={styles.continueButtonText}>Continue to app →</Text>
+          </TouchableOpacity>
         </View>
         <Text style={styles.title}>Today</Text>
         <Text style={styles.date}>{formatDate()}</Text>
@@ -346,8 +347,19 @@ const styles = StyleSheet.create({
 
   // HEADER
   header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 12 },
-  headerTop: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 12 },
-  headerIcon: { marginLeft: 20 },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  continueButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#f97316',
+  },
+  continueButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#f97316',
+  },
   title: { fontSize: 36, fontWeight: '700', color: '#1a1a1a', marginBottom: 4 },
   date: { fontSize: 16, fontWeight: '500', color: '#6b7280' },
 
