@@ -33,8 +33,16 @@ const styles = StyleSheet.create({
 export default function SplashScreen() {
   const router = useRouter();
   const [countdown, setCountdown] = useState(3);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const messageFadeAnim = useRef(new Animated.Value(1)).current;
+
+  const messages = [
+    "Focus on what matters first",
+    "One day or day one. You decide.",
+    "You got this."
+  ];
 
   useEffect(() => {
     // Start fade in animation
@@ -59,6 +67,21 @@ export default function SplashScreen() {
           clearInterval(countdownInterval);
           return 0;
         }
+        
+        // Change message with fade animation
+        Animated.timing(messageFadeAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }).start(() => {
+          setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % messages.length);
+          Animated.timing(messageFadeAnim, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }).start();
+        });
+        
         return prev - 1;
       });
     }, 1000);
@@ -100,7 +123,14 @@ export default function SplashScreen() {
         {countdown > 0 && (
           <Text style={styles.countdown}>{countdown}</Text>
         )}
-        <Text style={styles.message}>Focus on what matters first</Text>
+        <Animated.Text 
+          style={[
+            styles.message,
+            { opacity: messageFadeAnim }
+          ]}
+        >
+          {messages[currentMessageIndex]}
+        </Animated.Text>
       </Animated.View>
     </View>
   );
