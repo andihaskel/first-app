@@ -184,22 +184,6 @@ export default function TodayScreen() {
         ))}
       </ScrollView>
 
-      {/* Continue Slider */}
-      <View style={styles.sliderContainer}>
-        <TouchableOpacity 
-          style={styles.slider}
-          onPress={handleContinue}
-          activeOpacity={0.8}
-        >
-          <View style={styles.sliderTrack}>
-            <View style={styles.sliderButton}>
-              <ChevronRight size={24} color="#ffffff" />
-            </View>
-            <Text style={styles.sliderText}>Continue to App</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-
       {/* Undo Snackbar */}
       {showUndo && (
         <Animated.View 
@@ -394,47 +378,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25, shadowRadius: 4,
-  },
-
-  // SLIDER
-  sliderContainer: {
-    paddingHorizontal: 40,
-    paddingBottom: 40,
-    paddingTop: 20,
-    backgroundColor: '#ffffff',
-  },
-  slider: {
-    width: '100%',
-  },
-  sliderTrack: {
-    height: 60,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-    position: 'relative',
-  },
-  sliderButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#dc2626',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  sliderText: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: '#374151',
-    marginRight: 52,
   },
 
   // UNDO
