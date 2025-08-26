@@ -3,6 +3,33 @@ import { useEffect, useState, useRef } from 'react';
 import { Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  content: {
+    alignItems: 'center',
+  },
+  countdown: {
+    fontSize: 48,
+    fontFamily: 'Inter-Bold',
+    color: '#f97316',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  message: {
+    fontSize: 28,
+    fontFamily: 'Inter-SemiBold',
+    color: '#1a1a1a',
+    textAlign: 'center',
+    lineHeight: 36,
+  },
+});
+
 export default function SplashScreen() {
   const router = useRouter();
   const [countdown, setCountdown] = useState(3);
