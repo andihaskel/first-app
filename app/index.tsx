@@ -84,7 +84,7 @@ export default function SplashScreen() {
         
         return prev - 1;
       });
-    }, 1000);
+    }, 1200); // 400ms fade out + 400ms fade in + 400ms display time
 
     // Fade out animation after countdown finishes
     const fadeOutTimer = setTimeout(() => {
@@ -95,12 +95,12 @@ export default function SplashScreen() {
       }).start(() => {
         router.replace('/screens/TodayScreen');
       });
-    }, 3000);
+    }, 3600); // 3 * 1200ms
 
     // Cleanup timer
     const fallbackTimer = setTimeout(() => {
       router.replace('/screens/TodayScreen');
-    }, 4000);
+    }, 4600);
 
     return () => {
       clearInterval(countdownInterval);
