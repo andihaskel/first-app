@@ -4,8 +4,9 @@ import {
   Dimensions, Animated
 } from 'react-native';
 import { useState, useRef } from 'react';
-import { Plus, Menu, MoveHorizontal as MoreHorizontal, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X } from 'lucide-react-native';
+import { Plus, Menu, MoveHorizontal as MoreHorizontal, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, ChevronRight } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
+import { useRouter } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
@@ -20,6 +21,7 @@ interface Task {
 }
 
 export default function TodayScreen() {
+  const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([
     {
       id: '1',
@@ -120,6 +122,10 @@ export default function TodayScreen() {
     setShowDetailModal(false);
   };
 
+  const handleContinue = () => {
+    router.push('/main');
+  };
+
   const formatDate = () => {
     const date = new Date();
     const day = date.getDate();
@@ -176,6 +182,22 @@ export default function TodayScreen() {
           </TouchableOpacity>
         ))}
       </ScrollView>
+
+      {/* Continue Slider */}
+      <View style={styles.sliderContainer}>
+        <TouchableOpacity 
+          style={styles.slider}
+          onPress={handleContinue}
+          activeOpacity={0.8}
+        >
+          <View style={styles.sliderTrack}>
+            <View style={styles.sliderButton}>
+              <ChevronRight size={24} color="#ffffff" />
+            </View>
+            <Text style={styles.sliderText}>Continue to App</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
 
       {/* Undo Snackbar */}
       {showUndo && (
@@ -371,6 +393,47 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25, shadowRadius: 4,
+  },
+
+  // SLIDER
+  sliderContainer: {
+    paddingHorizontal: 40,
+    paddingBottom: 40,
+    paddingTop: 20,
+    backgroundColor: '#ffffff',
+  },
+  slider: {
+    width: '100%',
+  },
+  sliderTrack: {
+    height: 60,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    position: 'relative',
+  },
+  sliderButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#dc2626',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sliderText: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#374151',
+    marginRight: 52,
   },
 
   // UNDO
