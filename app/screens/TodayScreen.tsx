@@ -4,7 +4,7 @@ import {
   Dimensions, Animated
 } from 'react-native';
 import { useState, useRef } from 'react';
-import { Plus, ChartBar as BarChart3, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, ChevronRight } from 'lucide-react-native';
+import { Plus, BarChart4, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, ChevronRight } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
@@ -141,7 +141,7 @@ export default function TodayScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <BarChart3 size={24} color="#f97316" />
+          <BarChart4 size={24} color="#f97316" />
           <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
             <Text style={styles.continueButtonText}>Continue to app →</Text>
           </TouchableOpacity>
