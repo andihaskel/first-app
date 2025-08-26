@@ -4,7 +4,7 @@ import {
   Dimensions, Animated
 } from 'react-native';
 import { useState, useRef } from 'react';
-import { Plus, BarChart4, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, ChevronRight } from 'lucide-react-native';
+import { Plus, ChartBar as BarChart4, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, ChevronRight } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
