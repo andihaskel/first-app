@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   taskItem: { paddingVertical: 12, marginBottom: 4 },
   row: { flexDirection: 'row', alignItems: 'center' },
   checkbox: {
-    width: 28, height: 28, borderRadius: 14,
+    width: 22, height: 22, borderRadius: 11,
     borderWidth: 2, borderColor: '#d1d5db',
     marginRight: 12, marginTop: 2,
     justifyContent: 'center', alignItems: 'center',
