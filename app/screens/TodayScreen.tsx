@@ -1,10 +1,13 @@
 import { 
   View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, 
-  KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback, Keyboard 
+  KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback, Keyboard,
+  Dimensions, Animated
 } from 'react-native';
-import { useState } from 'react';
-import { Plus, Menu, MoveHorizontal as MoreHorizontal, Sparkles } from 'lucide-react-native';
+import { useState, useRef } from 'react';
+import { Plus, Menu, MoveHorizontal as MoreHorizontal, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
+
+const { width } = Dimensions.get('window');
 
 interface Task {
   id: string;
@@ -25,7 +28,7 @@ export default function TodayScreen() {
       completed: false,
       emoji: '💻👨‍💼',
       category: 'Today',
-      tag: 'Home 🏠 #'
+      tag: 'Home 🏠'
     },
     {
       id: '2',
@@ -38,13 +41,73 @@ export default function TodayScreen() {
     }
   ]);
 
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('Today');
+
+  // Undo state
+  const [showUndo, setShowUndo] = useState(false);
+  const [lastCompleted, setLastCompleted] = useState<Task | null>(null);
+  const undoAnim = useRef(new Animated.Value(0)).current;
+  let undoTimer: NodeJS.Timeout;
+
+  // Detail modal state
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const toggleTask = (id: string) => {
-    setTasks(tasks.map(task =>
-      task.id === id ? { ...task, completed: !task.completed } : task
-    ));
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    setTasks(tasks.filter(t => t.id !== id));
+    setLastCompleted(task);
+
+    setShowUndo(true);
+    Animated.timing(undoAnim, {
+      toValue: 1,
+      duration: 250,
+      useNativeDriver: true,
+    }).start();
+
+    undoTimer = setTimeout(() => {
+      Animated.timing(undoAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start(() => setShowUndo(false));
+    }, 3000);
+  };
+
+  const handleUndo = () => {
+    if (lastCompleted) {
+      setTasks(prev => [...prev, lastCompleted]);
+      setLastCompleted(null);
+    }
+    clearTimeout(undoTimer);
+    Animated.timing(undoAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => setShowUndo(false));
+  };
+
+  const addTask = () => {
+    if (newTaskTitle.trim()) {
+      const newTask: Task = {
+        id: Date.now().toString(),
+        title: newTaskTitle,
+        description: newTaskDescription,
+        completed: false,
+        emoji: '',
+        category: selectedCategory,
+        tag: 'Inbox 📥'
+      };
+      setTasks([...tasks, newTask]);
+      setNewTaskTitle('');
+      setNewTaskDescription('');
+      setShowAddModal(false);
+    }
   };
 
   const openTaskDetail = (task: Task) => {
@@ -84,35 +147,142 @@ export default function TodayScreen() {
         {tasks.map((task) => (
           <TouchableOpacity key={task.id} onPress={() => openTaskDetail(task)}>
             <View style={styles.taskItem}>
-              {/* Checkbox */}
-              <TouchableOpacity
-                style={[styles.checkbox, task.completed && styles.checkboxCompleted]}
-                onPress={() => toggleTask(task.id)}
-              >
-                {task.completed && <View style={styles.checkmark} />}
-              </TouchableOpacity>
-
-              {/* Task content */}
-              <View style={styles.taskContent}>
-                <View style={styles.taskHeader}>
-                  <Text style={[styles.taskTitle, task.completed && styles.taskTitleCompleted]}>
-                    {task.title} {task.emoji}
-                  </Text>
-                  <Text style={styles.taskTag}>{task.tag}</Text>
-                </View>
-                <Text style={[styles.taskDescription, task.completed && styles.taskDescriptionCompleted]}>
-                  {task.description}
+              {/* Checkbox + Title */}
+              <View style={styles.row}>
+                <TouchableOpacity
+                  style={[styles.checkbox, task.completed && styles.checkboxCompleted]}
+                  onPress={() => toggleTask(task.id)}
+                >
+                  {task.completed && <View style={styles.checkmark} />}
+                </TouchableOpacity>
+                <Text style={[styles.taskTitle, task.completed && styles.taskTitleCompleted]}>
+                  {task.title} {task.emoji}
                 </Text>
               </View>
+
+              {/* Description */}
+              <Text style={[styles.taskDescription, task.completed && styles.taskDescriptionCompleted]}>
+                {task.description}
+              </Text>
+
+              {/* Tag */}
+              <View style={styles.tagRow}>
+                <Text style={styles.taskTag}>{task.tag}</Text>
+              </View>
+
+              {/* Separator */}
+              <View style={styles.separator} />
             </View>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      {/* Add Button */}
-      <TouchableOpacity style={styles.addButton}>
+      {/* Undo Snackbar */}
+      {showUndo && (
+        <Animated.View 
+          style={[
+            styles.undoContainer,
+            {
+              opacity: undoAnim,
+              transform: [
+                { translateX: undoAnim.interpolate({ inputRange: [0,1], outputRange: [-200, 0] }) }
+              ]
+            }
+          ]}
+        >
+          <TouchableOpacity onPress={handleUndo} style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Undo2 size={18} color="#dc2626" style={{ marginRight: 6 }} />
+            <View>
+              <Text style={styles.undoText}>Undo</Text>
+              <Text style={styles.undoSubText}>Completed</Text>
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+
+      {/* FAB */}
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => setShowAddModal(true)}
+      >
         <Plus size={24} color="#ffffff" />
       </TouchableOpacity>
+
+      {/* Add Task Modal */}
+      <Modal
+        visible={showAddModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowAddModal(false)}>
+          <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView
+              style={{ flex: 1, justifyContent: 'flex-end' }}
+              behavior={Platform.OS === "ios" ? "padding" : undefined}
+            >
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={styles.modalSheet}>
+                  <TextInput
+                    style={styles.titleInput}
+                    placeholder="e.g., Replace lightbulb tomorrow at 3pm..."
+                    value={newTaskTitle}
+                    onChangeText={setNewTaskTitle}
+                    autoFocus
+                  />
+
+                  <TextInput
+                    style={styles.descriptionInput}
+                    placeholder="Description"
+                    value={newTaskDescription}
+                    onChangeText={setNewTaskDescription}
+                    multiline
+                  />
+
+                  {/* Categorías */}
+                  <View style={styles.categoryButtons}>
+                    <TouchableOpacity style={styles.categoryChip}>
+                      <Calendar size={16} color={selectedCategory === 'Today' ? '#0f7b3e' : '#6b7280'} style={{marginRight: 6}} />
+                      <Text style={[styles.categoryChipText, selectedCategory === 'Today' && {color: '#0f7b3e'}]}>Today</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.categoryChip}>
+                      <Flag size={16} color="#6b7280" style={{marginRight: 6}} />
+                      <Text style={styles.categoryChipText}>Priority</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.categoryChip}>
+                      <Bell size={16} color="#6b7280" style={{marginRight: 6}} />
+                      <Text style={styles.categoryChipText}>Reminders</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.categoryChip}>
+                      <Text style={styles.categoryChipText}>...</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.separator} />
+
+                  <View style={styles.bottomRow}>
+                    <TouchableOpacity style={styles.dropdown}>
+                      <Inbox size={18} color="#6b7280" style={{marginRight: 6}} />
+                      <Text style={styles.dropdownText}>Inbox ▼</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      style={[styles.sendButton, !newTaskTitle.trim() && styles.sendButtonDisabled]}
+                      onPress={addTask}
+                      disabled={!newTaskTitle.trim()}
+                    >
+                      <Text style={styles.sendArrow}>↑</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
 
       {/* Task Detail Modal */}
       <Modal
@@ -129,16 +299,15 @@ export default function TodayScreen() {
                 behavior={Platform.OS === "ios" ? "padding" : undefined}
               >
                 <View style={styles.detailHeader}>
-                  <Text style={styles.detailTag}>{selectedTask?.tag || 'Inbox'} </Text>
+                  <Text style={styles.detailTag}>{selectedTask?.tag || 'Inbox'}</Text>
                   <TouchableOpacity onPress={closeTaskDetail}>
-                    <Text style={styles.detailClose}>✕</Text>
+                    <X size={22} color="#6b7280" />
                   </TouchableOpacity>
                 </View>
 
                 <Text style={styles.detailTitle}>{selectedTask?.title}</Text>
                 <Text style={styles.detailDescription}>{selectedTask?.description}</Text>
 
-                {/* Subtasks */}
                 <ScrollView style={{ flex: 1 }}>
                   <TouchableOpacity style={styles.subTask}>
                     <View style={styles.subCircle} />
@@ -146,7 +315,6 @@ export default function TodayScreen() {
                   </TouchableOpacity>
                 </ScrollView>
 
-                {/* AI Assistant */}
                 <View style={styles.aiContainer}>
                   <TextInput
                     style={styles.aiInput}
@@ -170,104 +338,25 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
 
   // HEADER
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
+  header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 12 },
+  headerTop: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 12 },
   headerIcon: { marginLeft: 20 },
   title: { fontSize: 36, fontWeight: '700', color: '#1a1a1a', marginBottom: 4 },
   date: { fontSize: 16, fontWeight: '500', color: '#6b7280' },
 
   // TASKS
   tasksList: { flex: 1, paddingHorizontal: 20 },
-  taskItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
+  taskItem: { paddingVertical: 12, marginBottom: 4 },
+  row: { flexDirection: 'row', alignItems: 'center' },
   checkbox: {
     width: 22, height: 22, borderRadius: 11,
     borderWidth: 2, borderColor: '#d1d5db',
-    marginRight: 16, marginTop: 2,
+    marginRight: 12, marginTop: 2,
     justifyContent: 'center', alignItems: 'center',
   },
   checkboxCompleted: { backgroundColor: '#f44336', borderColor: '#f44336' },
   checkmark: { width: 8, height: 8, backgroundColor: '#ffffff', borderRadius: 4 },
-  taskContent: { flex: 1 },
-  taskHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  taskTitle: { fontSize: 16, fontWeight: '600', color: '#1a1a1a', flex: 1 },
+  taskTitle: { fontSize: 16, fontWeight: '600', color: '#1a1a1a' },
   taskTitleCompleted: { textDecorationLine: 'line-through', color: '#9ca3af' },
-  taskTag: { fontSize: 13, color: '#6b7280', marginLeft: 8 },
-  taskDescription: { fontSize: 14, color: '#6b7280', marginTop: 2 },
-  taskDescriptionCompleted: { textDecorationLine: 'line-through', color: '#9ca3af' },
-
-  // FAB
-  addButton: {
-    position: 'absolute',
-    bottom: 80,
-    right: 20,
-    width: 56, height: 56, borderRadius: 28,
-    backgroundColor: '#f44336',
-    justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25, shadowRadius: 4,
-  },
-
-  // DETAIL MODAL
-  detailOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.1)',
-  },
-  detailSheet: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 20,
-    height: '80%',
-  },
-  detailHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  detailTag: { fontSize: 14, color: '#6b7280' },
-  detailClose: { fontSize: 20, color: '#6b7280' },
-  detailTitle: { fontSize: 20, fontWeight: '700', marginBottom: 6 },
-  detailDescription: { fontSize: 16, color: '#6b7280', marginBottom: 16 },
-
-  subTask: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
-  subCircle: {
-    width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#d1d5db', marginRight: 12,
-  },
-  subText: { fontSize: 16, color: '#1a1a1a' },
-
-  aiContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 12,
-    padding: 8,
-    marginTop: 12,
-  },
-  aiInput: {
-    flex: 1,
-    fontSize: 15,
-    minHeight: 60,
-    textAlignVertical: 'top',
-    paddingHorizontal: 8,
-  },
-  magicButton: {
-    padding: 8,
-  },
-});
+  taskDescription: { fontSize: 14, color: '#6b7280', marginLeft: 34, marginTop: 2 },
+  taskDescriptionCompleted: { textDecor
