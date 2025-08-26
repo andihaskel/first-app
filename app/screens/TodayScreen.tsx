@@ -359,4 +359,57 @@ const styles = StyleSheet.create({
   taskTitle: { fontSize: 16, fontWeight: '600', color: '#1a1a1a' },
   taskTitleCompleted: { textDecorationLine: 'line-through', color: '#9ca3af' },
   taskDescription: { fontSize: 14, color: '#6b7280', marginLeft: 34, marginTop: 2 },
-  taskDescriptionCompleted: { textDecor
+  taskDescriptionCompleted: { textDecorationLine: 'line-through', color: '#9ca3af' },
+  tagRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 4, marginLeft: 34 },
+  taskTag: { fontSize: 13, color: '#6b7280' },
+  separator: { height: 1, backgroundColor: '#f3f4f6', marginTop: 8, marginLeft: 34 },
+
+  // FAB
+  addButton: {
+    position: 'absolute', bottom: 20, right: 20,
+    width: 56, height: 56, borderRadius: 28, backgroundColor: '#f44336',
+    justifyContent: 'center', alignItems: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25, shadowRadius: 4,
+  },
+
+  // UNDO
+  undoContainer: {
+    position: 'absolute', bottom: 20, left: 20, right: 100,
+    backgroundColor: '#fff', borderRadius: 12,
+    paddingVertical: 10, paddingHorizontal: 16,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1, shadowRadius: 4,
+  },
+  undoText: { fontSize: 16, fontWeight: '600', color: '#dc2626' },
+  undoSubText: { fontSize: 13, color: '#6b7280' },
+
+  // MODAL ADD
+  modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.3)' },
+  modalSheet: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40, maxWidth: width, alignSelf: 'center', width: '100%' },
+  titleInput: { fontSize: 16, fontWeight: '500', marginBottom: 8, paddingVertical: 6, color: '#111827' },
+  descriptionInput: { fontSize: 14, color: '#6b7280', marginBottom: 16, paddingVertical: 6 },
+  categoryButtons: { flexDirection: 'row', marginBottom: 12 },
+  categoryChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#d1d5db', marginRight: 8 },
+  categoryChipText: { fontSize: 14, color: '#374151' },
+  bottomRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  dropdown: { flexDirection: 'row', alignItems: 'center' },
+  dropdownText: { fontSize: 15, color: '#374151' },
+  sendButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f44336', justifyContent: 'center', alignItems: 'center' },
+  sendButtonDisabled: { backgroundColor: '#d1d5db' },
+  sendArrow: { fontSize: 18, color: '#fff', fontWeight: '600' },
+
+  // MODAL DETAIL
+  detailOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.1)' },
+  detailSheet: { backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 20, height: '60%' },
+  detailHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  detailTag: { fontSize: 14, color: '#6b7280' },
+  detailTitle: { fontSize: 20, fontWeight: '700', marginBottom: 6 },
+  detailDescription: { fontSize: 16, color: '#6b7280', marginBottom: 16 },
+  subTask: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
+  subCircle: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#d1d5db', marginRight: 12 },
+  subText: { fontSize: 16, color: '#1a1a1a' },
+  aiContainer: { flexDirection: 'row', alignItems: 'flex-end', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 8, marginTop: 12 },
+  aiInput: { flex: 1, fontSize: 15, minHeight: 60, textAlignVertical: 'top', paddingHorizontal: 8 },
+  magicButton: { padding: 8 },
+});
