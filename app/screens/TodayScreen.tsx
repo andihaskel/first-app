@@ -338,7 +338,6 @@ export default function TodayScreen() {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-      <Text style={styles.quote}>"One day or day one. You decide."</Text>
     </View>
   );
 }
