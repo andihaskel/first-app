@@ -16,7 +16,6 @@ interface Task {
   description: string;
   completed: boolean;
   isCompleting?: boolean;
-  slideAnim?: Animated.Value;
   fadeAnim?: Animated.Value;
   emoji: string;
   category: string;
@@ -50,7 +49,6 @@ export default function TodayScreen() {
   useEffect(() => {
     setTasks(prev => prev.map(task => ({
       ...task,
-      slideAnim: task.slideAnim || new Animated.Value(0),
       fadeAnim: task.fadeAnim || new Animated.Value(1)
     })));
   }, []);
@@ -80,19 +78,12 @@ export default function TodayScreen() {
 
     // After 500ms, start slide up and fade out animation
     setTimeout(() => {
-      if (task.slideAnim && task.fadeAnim) {
-        Animated.parallel([
-          Animated.timing(task.slideAnim, {
-            toValue: -100,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-          Animated.timing(task.fadeAnim, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-          })
-        ]).start(() => {
+      if (task.fadeAnim) {
+        Animated.timing(task.fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start(() => {
           // Remove task after animation completes
           setTasks(prev => prev.filter(t => t.id !== id));
           setLastCompleted(task);
@@ -121,7 +112,6 @@ export default function TodayScreen() {
       const restoredTask = {
         ...lastCompleted,
         isCompleting: false,
-        slideAnim: new Animated.Value(0),
         fadeAnim: new Animated.Value(1)
       };
       setTasks(prev => [...prev, restoredTask]);
@@ -145,7 +135,6 @@ export default function TodayScreen() {
         emoji: '',
         category: selectedCategory,
         tag: 'Inbox 📥',
-        slideAnim: new Animated.Value(0),
         fadeAnim: new Animated.Value(1)
       };
       setTasks([...tasks, newTask]);
@@ -201,7 +190,6 @@ export default function TodayScreen() {
             style={[
               styles.taskItem,
               {
-                transform: [{ translateY: task.slideAnim || 0 }],
                 opacity: task.fadeAnim || 1
               }
             ]}
