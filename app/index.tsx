@@ -45,47 +45,11 @@ export default function SplashScreen() {
     }, 1000);
 
     // Cleanup timer
-    // Start fade in animation
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Countdown timer
-    const countdownInterval = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(countdownInterval);
-          // Fade out animation before navigation
-          Animated.timing(fadeAnim, {
-            toValue: 0,
-            duration: 500,
-            useNativeDriver: true,
-          }).start(() => {
-            router.replace('/screens/TodayScreen');
-          });
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    // Cleanup timer
     const navigationTimer = setTimeout(() => {
       router.replace('/screens/TodayScreen');
     }, 3500);
 
     return () => {
-      clearInterval(countdownInterval);
       clearInterval(countdownInterval);
       clearTimeout(navigationTimer);
     };
