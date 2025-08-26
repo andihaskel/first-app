@@ -336,8 +336,9 @@ export default function TodayScreen() {
               </KeyboardAvoidingView>
             </TouchableWithoutFeedback>
           </View>
-      <Text style={styles.quote}>"One day or day one. You decide."</Text>
+        </TouchableWithoutFeedback>
       </Modal>
+      <Text style={styles.quote}>"One day or day one. You decide."</Text>
     </View>
   );
 }
@@ -363,7 +364,6 @@ const styles = StyleSheet.create({
     color: '#f97316',
   },
   title: { fontSize: 36, fontWeight: '700', color: '#1a1a1a', marginBottom: 4 },
-  quote: { fontSize: 18, fontStyle: 'italic', color: '#6b7280', marginBottom: 4 },
   date: { fontSize: 16, fontWeight: '500', color: '#6b7280' },
 
   // TASKS
@@ -420,6 +420,7 @@ const styles = StyleSheet.create({
   alignItems: 'center',
   marginTop: 10,  
 },
+  dropdown: { flexDirection: 'row', alignItems: 'center' },
   dropdownText: { fontSize: 15, color: '#374151' },
   sendButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f44336', justifyContent: 'center', alignItems: 'center' },
   sendButtonDisabled: { backgroundColor: '#d1d5db' },
@@ -438,4 +439,5 @@ const styles = StyleSheet.create({
   aiContainer: { flexDirection: 'row', alignItems: 'flex-end', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 8, marginTop: 12 },
   aiInput: { flex: 1, fontSize: 15, minHeight: 60, textAlignVertical: 'top', paddingHorizontal: 8 },
   magicButton: { padding: 8 },
+  quote: { fontSize: 14, color: '#6b7280', textAlign: 'center', fontStyle: 'italic' },
 });
