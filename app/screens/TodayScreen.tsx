@@ -141,7 +141,9 @@ export default function TodayScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <TrendingUp size={24} color="#f97316" />
+          <View style={styles.metricsButton}>
+            <TrendingUp size={24} color="#f97316" />
+          </View>
           <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
             <Text style={styles.continueButtonText}>Continue to app →</Text>
           </TouchableOpacity>
@@ -348,6 +350,12 @@ const styles = StyleSheet.create({
   // HEADER
   header: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 12 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  metricsButton: {
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#f97316',
+  },
   continueButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
