@@ -7,8 +7,22 @@ import { useState, useRef, useEffect } from 'react';
 import { Plus, TrendingUp, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, ChevronRight, Check, ChevronDown } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
+import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated as ReanimatedAnimated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring, 
+  runOnJS,
+  interpolate,
+  Extrapolate
+} from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
+
+// Modal heights
+const COLLAPSED_HEIGHT = height * 0.4; // 40% of screen
+const EXPANDED_HEIGHT = height * 0.85;  // 85% of screen
 
 interface SubTask {
   id: string;
@@ -82,6 +96,10 @@ export default function TodayScreen() {
   const [editingDescription, setEditingDescription] = useState(false);
   const [tempTitle, setTempTitle] = useState('');
   const [tempDescription, setTempDescription] = useState('');
+
+  // Modal animation state
+  const modalHeight = useSharedValue(COLLAPSED_HEIGHT);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Sub-task modal state
   const [showSubTaskModal, setShowSubTaskModal] = useState(false);
@@ -224,6 +242,8 @@ export default function TodayScreen() {
     setSelectedTask(task);
     setTempTitle(task.title);
     setTempDescription(task.description);
+    setIsExpanded(false);
+    modalHeight.value = COLLAPSED_HEIGHT;
     setShowDetailModal(true);
   };
 
@@ -232,6 +252,8 @@ export default function TodayScreen() {
     setShowDetailModal(false);
     setEditingTitle(false);
     setEditingDescription(false);
+    setIsExpanded(false);
+    modalHeight.value = COLLAPSED_HEIGHT;
   };
 
   const startEditingTitle = () => {
@@ -290,8 +312,68 @@ export default function TodayScreen() {
     return subTasks.filter(st => st.completed).length;
   };
 
+  // Gesture handler for modal
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      const newHeight = modalHeight.value - event.translationY;
+      modalHeight.value = Math.max(COLLAPSED_HEIGHT, Math.min(EXPANDED_HEIGHT, newHeight));
+    })
+    .onEnd((event) => {
+      const velocity = -event.velocityY;
+      const currentHeight = modalHeight.value;
+      
+      // Determine target based on velocity and current position
+      let targetHeight = COLLAPSED_HEIGHT;
+      let targetExpanded = false;
+      
+      if (velocity > 500) {
+        // Fast upward swipe - expand
+        targetHeight = EXPANDED_HEIGHT;
+        targetExpanded = true;
+      } else if (velocity < -500) {
+        // Fast downward swipe - collapse
+        targetHeight = COLLAPSED_HEIGHT;
+        targetExpanded = false;
+      } else {
+        // Slow swipe - snap to nearest
+        const midPoint = (COLLAPSED_HEIGHT + EXPANDED_HEIGHT) / 2;
+        if (currentHeight > midPoint) {
+          targetHeight = EXPANDED_HEIGHT;
+          targetExpanded = true;
+        } else {
+          targetHeight = COLLAPSED_HEIGHT;
+          targetExpanded = false;
+        }
+      }
+      
+      modalHeight.value = withSpring(targetHeight, {
+        damping: 20,
+        stiffness: 300,
+      });
+      
+      runOnJS(setIsExpanded)(targetExpanded);
+    });
+
+  // Animated styles
+  const animatedModalStyle = useAnimatedStyle(() => {
+    return {
+      height: modalHeight.value,
+    };
+  });
+
+  const animatedHandleStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      modalHeight.value,
+      [COLLAPSED_HEIGHT, EXPANDED_HEIGHT],
+      [0.3, 0.6],
+      Extrapolate.CLAMP
+    );
+    return {
+      opacity,
+    };
+  });
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       <StatusBar style="dark" />
 
       {/* Header */}
@@ -472,119 +554,128 @@ export default function TodayScreen() {
         <TouchableWithoutFeedback onPress={closeTaskDetail}>
           <View style={styles.detailOverlay}>
             <TouchableWithoutFeedback>
-              <KeyboardAvoidingView
-                style={styles.detailSheet}
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-              >
-                <View style={styles.detailHeader}>
-                  <Text style={styles.detailTag}>{selectedTask?.tag || 'Inbox'}</Text>
-                  <TouchableOpacity onPress={closeTaskDetail}>
-                    <X size={22} color="#6b7280" />
-                  </TouchableOpacity>
-                </View>
-
-                {/* Editable Title */}
-                {editingTitle ? (
-                  <TextInput
-                    style={styles.editTitleInput}
-                    value={tempTitle}
-                    onChangeText={setTempTitle}
-                    onBlur={saveTitle}
-                    onSubmitEditing={saveTitle}
-                    autoFocus
-                    multiline
-                  />
-                ) : (
-                  <TouchableOpacity onPress={startEditingTitle}>
-                    <Text style={styles.detailTitle}>{selectedTask?.title}</Text>
-                  </TouchableOpacity>
-                )}
-
-                {/* Editable Description */}
-                {editingDescription ? (
-                  <TextInput
-                    style={styles.editDescriptionInput}
-                    value={tempDescription}
-                    onChangeText={setTempDescription}
-                    onBlur={saveDescription}
-                    onSubmitEditing={saveDescription}
-                    autoFocus
-                    multiline
-                    placeholder="Add description..."
-                  />
-                ) : (
-                  <TouchableOpacity onPress={startEditingDescription}>
-                    <Text style={styles.detailDescription}>
-                      {selectedTask?.description || 'Add description...'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-
-                <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-                  {/* Sub-tasks Section */}
-                  {selectedTask && selectedTask.subTasks.length > 0 && (
-                    <View style={styles.subTasksSection}>
-                      <TouchableOpacity 
-                        style={styles.subTasksHeader}
-                        onPress={() => setShowSubTasks(!showSubTasks)}
-                      >
-                        <Text style={styles.subTasksTitle}>
-                          Sub-tasks {getCompletedSubTasksCount(selectedTask.subTasks)}/{selectedTask.subTasks.length}
-                        </Text>
-                        <ChevronDown 
-                          size={20} 
-                          color="#6b7280" 
-                          style={{ 
-                            transform: [{ rotate: showSubTasks ? '0deg' : '-90deg' }] 
-                          }} 
-                        />
-                      </TouchableOpacity>
-
-                      {showSubTasks && selectedTask.subTasks.map((subTask) => (
-                        <View key={subTask.id} style={styles.subTaskItem}>
-                          <TouchableOpacity
-                            style={[
-                              styles.subTaskCheckbox,
-                              subTask.completed && styles.subTaskCheckboxCompleted
-                            ]}
-                            onPress={() => toggleSubTask(selectedTask.id, subTask.id)}
-                          >
-                            {subTask.completed && (
-                              <Check size={12} color="#ffffff" strokeWidth={3} />
-                            )}
-                          </TouchableOpacity>
-                          <Text style={[
-                            styles.subTaskText,
-                            subTask.completed && styles.subTaskTextCompleted
-                          ]}>
-                            {subTask.title}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-
-                  {/* Add Sub-task Button */}
-                  <TouchableOpacity 
-                    style={styles.addSubTaskButton}
-                    onPress={() => setShowSubTaskModal(true)}
+              <GestureDetector gesture={panGesture}>
+                <ReanimatedAnimated.View style={[styles.detailSheet, animatedModalStyle]}>
+                  {/* Drag Handle */}
+                  <ReanimatedAnimated.View style={[styles.dragHandle, animatedHandleStyle]} />
+                  
+                  <KeyboardAvoidingView
+                    style={styles.detailContent}
+                    behavior={Platform.OS === "ios" ? "padding" : undefined}
                   >
-                    <Plus size={18} color="#dc2626" />
-                    <Text style={styles.addSubTaskText}>Add Sub-task</Text>
-                  </TouchableOpacity>
-                </ScrollView>
+                    <View style={styles.detailHeader}>
+                      <Text style={styles.detailTag}>{selectedTask?.tag || 'Inbox'}</Text>
+                      <TouchableOpacity onPress={closeTaskDetail}>
+                        <X size={22} color="#6b7280" />
+                      </TouchableOpacity>
+                    </View>
 
-                <View style={styles.aiContainer}>
-                  <TextInput
-                    style={styles.aiInput}
-                    placeholder="Ask AI to help you break this task into steps..."
-                    multiline
-                  />
-                  <TouchableOpacity style={styles.magicButton}>
-                    <Sparkles size={22} color="#6b7280" />
-                  </TouchableOpacity>
-                </View>
-              </KeyboardAvoidingView>
+                    {/* Editable Title */}
+                    {editingTitle ? (
+                      <TextInput
+                        style={styles.editTitleInput}
+                        value={tempTitle}
+                        onChangeText={setTempTitle}
+                        onBlur={saveTitle}
+                        onSubmitEditing={saveTitle}
+                        autoFocus
+                        multiline
+                      />
+                    ) : (
+                      <TouchableOpacity onPress={startEditingTitle}>
+                        <Text style={styles.detailTitle}>{selectedTask?.title}</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {/* Editable Description */}
+                    {editingDescription ? (
+                      <TextInput
+                        style={styles.editDescriptionInput}
+                        value={tempDescription}
+                        onChangeText={setTempDescription}
+                        onBlur={saveDescription}
+                        onSubmitEditing={saveDescription}
+                        autoFocus
+                        multiline
+                        placeholder="Add description..."
+                      />
+                    ) : (
+                      <TouchableOpacity onPress={startEditingDescription}>
+                        <Text style={styles.detailDescription}>
+                          {selectedTask?.description || 'Add description...'}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+
+                    <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+                      {/* Sub-tasks Section */}
+                      {selectedTask && selectedTask.subTasks.length > 0 && (
+                        <View style={styles.subTasksSection}>
+                          <TouchableOpacity 
+                            style={styles.subTasksHeader}
+                            onPress={() => setShowSubTasks(!showSubTasks)}
+                          >
+                            <Text style={styles.subTasksTitle}>
+                              Sub-tasks {getCompletedSubTasksCount(selectedTask.subTasks)}/{selectedTask.subTasks.length}
+                            </Text>
+                            <ChevronDown 
+                              size={20} 
+                              color="#6b7280" 
+                              style={{ 
+                                transform: [{ rotate: showSubTasks ? '0deg' : '-90deg' }] 
+                              }} 
+                            />
+                          </TouchableOpacity>
+
+                          {showSubTasks && selectedTask.subTasks.map((subTask) => (
+                            <View key={subTask.id} style={styles.subTaskItem}>
+                              <TouchableOpacity
+                                style={[
+                                  styles.subTaskCheckbox,
+                                  subTask.completed && styles.subTaskCheckboxCompleted
+                                ]}
+                                onPress={() => toggleSubTask(selectedTask.id, subTask.id)}
+                              >
+                                {subTask.completed && (
+                                  <Check size={12} color="#ffffff" strokeWidth={3} />
+                                )}
+                              </TouchableOpacity>
+                              <Text style={[
+                                styles.subTaskText,
+                                subTask.completed && styles.subTaskTextCompleted
+                              ]}>
+                                {subTask.title}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+
+                      {/* Add Sub-task Button */}
+                      <TouchableOpacity 
+                        style={styles.addSubTaskButton}
+                        onPress={() => setShowSubTaskModal(true)}
+                      >
+                        <Plus size={18} color="#dc2626" />
+                        <Text style={styles.addSubTaskText}>Add Sub-task</Text>
+                      </TouchableOpacity>
+                    </ScrollView>
+
+                    {isExpanded && (
+                      <View style={styles.aiContainer}>
+                        <TextInput
+                          style={styles.aiInput}
+                          placeholder="Ask AI to help you break this task into steps..."
+                          multiline
+                        />
+                        <TouchableOpacity style={styles.magicButton}>
+                          <Sparkles size={22} color="#6b7280" />
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </KeyboardAvoidingView>
+                </ReanimatedAnimated.View>
+              </GestureDetector>
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
@@ -642,7 +733,7 @@ export default function TodayScreen() {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
@@ -731,7 +822,28 @@ const styles = StyleSheet.create({
 
   // MODAL DETAIL
   detailOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.1)' },
-  detailSheet: { backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 20, height: '80%' },
+  detailSheet: { 
+    backgroundColor: '#fff', 
+    borderTopLeftRadius: 16, 
+    borderTopRightRadius: 16, 
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  dragHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#d1d5db',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  detailContent: {
+    flex: 1,
+    padding: 20,
+  },
   detailHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   detailTag: { fontSize: 14, color: '#6b7280' },
   detailTitle: { fontSize: 20, fontWeight: '700', marginBottom: 6 },
