@@ -8,7 +8,8 @@ import { Plus, TrendingUp, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, Chev
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated as ReanimatedAnimated, { 
+import { 
+  Animated as ReanimatedAnimated,
   useSharedValue, 
   useAnimatedStyle, 
   withSpring, 
