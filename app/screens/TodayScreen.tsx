@@ -15,6 +15,7 @@ import Animated, {
   runOnJS,
   interpolate,
   Extrapolate
+} from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 const { height } = Dimensions.get('window');
