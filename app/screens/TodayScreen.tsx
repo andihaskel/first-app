@@ -4,11 +4,17 @@ import {
   Dimensions, Animated
 } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
-import { Plus, TrendingUp, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, ChevronRight, Check } from 'lucide-react-native';
+import { Plus, TrendingUp, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, ChevronRight, Check, ChevronDown } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
 const { width } = Dimensions.get('window');
+
+interface SubTask {
+  id: string;
+  title: string;
+  completed: boolean;
+}
 
 interface Task {
   id: string;
@@ -20,6 +26,7 @@ interface Task {
   emoji: string;
   category: string;
   tag: string;
+  subTasks: SubTask[];
 }
 
 export default function TodayScreen() {
@@ -32,7 +39,8 @@ export default function TodayScreen() {
       completed: false,
       emoji: '💻👨‍💼',
       category: 'Today',
-      tag: 'Home 🏠'
+      tag: 'Home 🏠',
+      subTasks: []
     },
     {
       id: '2',
@@ -41,7 +49,10 @@ export default function TodayScreen() {
       completed: false,
       emoji: '🏄‍♂️',
       category: 'Today',
-      tag: 'Inbox 📥'
+      tag: 'Inbox 📥',
+      subTasks: [
+        { id: 'sub1', title: 'Test', completed: false }
+      ]
     }
   ]);
 
@@ -52,6 +63,7 @@ export default function TodayScreen() {
       fadeAnim: task.fadeAnim || new Animated.Value(1)
     })));
   }, []);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
@@ -66,6 +78,15 @@ export default function TodayScreen() {
   // Detail modal state
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [tempTitle, setTempTitle] = useState('');
+  const [tempDescription, setTempDescription] = useState('');
+
+  // Sub-task modal state
+  const [showSubTaskModal, setShowSubTaskModal] = useState(false);
+  const [newSubTaskTitle, setNewSubTaskTitle] = useState('');
+  const [showSubTasks, setShowSubTasks] = useState(true);
 
   const toggleTask = (id: string) => {
     const task = tasks.find(t => t.id === id);
@@ -107,6 +128,34 @@ export default function TodayScreen() {
     }, 500);
   };
 
+  const toggleSubTask = (taskId: string, subTaskId: string) => {
+    setTasks(prev => prev.map(task => {
+      if (task.id === taskId) {
+        return {
+          ...task,
+          subTasks: task.subTasks.map(subTask =>
+            subTask.id === subTaskId 
+              ? { ...subTask, completed: !subTask.completed }
+              : subTask
+          )
+        };
+      }
+      return task;
+    }));
+
+    // Update selected task if it's the one being modified
+    if (selectedTask && selectedTask.id === taskId) {
+      setSelectedTask(prev => prev ? {
+        ...prev,
+        subTasks: prev.subTasks.map(subTask =>
+          subTask.id === subTaskId 
+            ? { ...subTask, completed: !subTask.completed }
+            : subTask
+        )
+      } : null);
+    }
+  };
+
   const handleUndo = () => {
     if (lastCompleted) {
       const restoredTask = {
@@ -135,7 +184,8 @@ export default function TodayScreen() {
         emoji: '',
         category: selectedCategory,
         tag: 'Inbox 📥',
-        fadeAnim: new Animated.Value(1)
+        fadeAnim: new Animated.Value(1),
+        subTasks: []
       };
       setTasks([...tasks, newTask]);
       setNewTaskTitle('');
@@ -144,14 +194,84 @@ export default function TodayScreen() {
     }
   };
 
+  const addSubTask = () => {
+    if (newSubTaskTitle.trim() && selectedTask) {
+      const newSubTask: SubTask = {
+        id: Date.now().toString(),
+        title: newSubTaskTitle,
+        completed: false
+      };
+
+      // Update tasks array
+      setTasks(prev => prev.map(task => 
+        task.id === selectedTask.id 
+          ? { ...task, subTasks: [...task.subTasks, newSubTask] }
+          : task
+      ));
+
+      // Update selected task
+      setSelectedTask(prev => prev ? {
+        ...prev,
+        subTasks: [...prev.subTasks, newSubTask]
+      } : null);
+
+      setNewSubTaskTitle('');
+      setShowSubTaskModal(false);
+    }
+  };
+
   const openTaskDetail = (task: Task) => {
     setSelectedTask(task);
+    setTempTitle(task.title);
+    setTempDescription(task.description);
     setShowDetailModal(true);
   };
 
   const closeTaskDetail = () => {
     setSelectedTask(null);
     setShowDetailModal(false);
+    setEditingTitle(false);
+    setEditingDescription(false);
+  };
+
+  const startEditingTitle = () => {
+    setEditingTitle(true);
+    setTempTitle(selectedTask?.title || '');
+  };
+
+  const startEditingDescription = () => {
+    setEditingDescription(true);
+    setTempDescription(selectedTask?.description || '');
+  };
+
+  const saveTitle = () => {
+    if (selectedTask && tempTitle.trim()) {
+      // Update tasks array
+      setTasks(prev => prev.map(task => 
+        task.id === selectedTask.id 
+          ? { ...task, title: tempTitle.trim() }
+          : task
+      ));
+
+      // Update selected task
+      setSelectedTask(prev => prev ? { ...prev, title: tempTitle.trim() } : null);
+    }
+    setEditingTitle(false);
+  };
+
+  const saveDescription = () => {
+    if (selectedTask) {
+      // Update tasks array
+      setTasks(prev => prev.map(task => 
+        task.id === selectedTask.id 
+          ? { ...task, description: tempDescription.trim() }
+          : task
+      ));
+
+      // Update selected task
+      setSelectedTask(prev => prev ? { ...prev, description: tempDescription.trim() } : null);
+    }
+    setEditingDescription(false);
   };
 
   const handleContinue = () => {
@@ -164,6 +284,10 @@ export default function TodayScreen() {
     const month = date.toLocaleDateString('en-US', { month: 'short' });
     const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
     return `${day} ${month} • ${weekday}`;
+  };
+
+  const getCompletedSubTasksCount = (subTasks: SubTask[]) => {
+    return subTasks.filter(st => st.completed).length;
   };
 
   return (
@@ -359,13 +483,94 @@ export default function TodayScreen() {
                   </TouchableOpacity>
                 </View>
 
-                <Text style={styles.detailTitle}>{selectedTask?.title}</Text>
-                <Text style={styles.detailDescription}>{selectedTask?.description}</Text>
+                {/* Editable Title */}
+                {editingTitle ? (
+                  <TextInput
+                    style={styles.editTitleInput}
+                    value={tempTitle}
+                    onChangeText={setTempTitle}
+                    onBlur={saveTitle}
+                    onSubmitEditing={saveTitle}
+                    autoFocus
+                    multiline
+                  />
+                ) : (
+                  <TouchableOpacity onPress={startEditingTitle}>
+                    <Text style={styles.detailTitle}>{selectedTask?.title}</Text>
+                  </TouchableOpacity>
+                )}
 
-                <ScrollView style={{ flex: 1 }}>
-                  <TouchableOpacity style={styles.subTask}>
-                    <View style={styles.subCircle} />
-                    <Text style={styles.subText}>Add Sub-task</Text>
+                {/* Editable Description */}
+                {editingDescription ? (
+                  <TextInput
+                    style={styles.editDescriptionInput}
+                    value={tempDescription}
+                    onChangeText={setTempDescription}
+                    onBlur={saveDescription}
+                    onSubmitEditing={saveDescription}
+                    autoFocus
+                    multiline
+                    placeholder="Add description..."
+                  />
+                ) : (
+                  <TouchableOpacity onPress={startEditingDescription}>
+                    <Text style={styles.detailDescription}>
+                      {selectedTask?.description || 'Add description...'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+                  {/* Sub-tasks Section */}
+                  {selectedTask && selectedTask.subTasks.length > 0 && (
+                    <View style={styles.subTasksSection}>
+                      <TouchableOpacity 
+                        style={styles.subTasksHeader}
+                        onPress={() => setShowSubTasks(!showSubTasks)}
+                      >
+                        <Text style={styles.subTasksTitle}>
+                          Sub-tasks {getCompletedSubTasksCount(selectedTask.subTasks)}/{selectedTask.subTasks.length}
+                        </Text>
+                        <ChevronDown 
+                          size={20} 
+                          color="#6b7280" 
+                          style={{ 
+                            transform: [{ rotate: showSubTasks ? '0deg' : '-90deg' }] 
+                          }} 
+                        />
+                      </TouchableOpacity>
+
+                      {showSubTasks && selectedTask.subTasks.map((subTask) => (
+                        <View key={subTask.id} style={styles.subTaskItem}>
+                          <TouchableOpacity
+                            style={[
+                              styles.subTaskCheckbox,
+                              subTask.completed && styles.subTaskCheckboxCompleted
+                            ]}
+                            onPress={() => toggleSubTask(selectedTask.id, subTask.id)}
+                          >
+                            {subTask.completed && (
+                              <Check size={12} color="#ffffff" strokeWidth={3} />
+                            )}
+                          </TouchableOpacity>
+                          <Text style={[
+                            styles.subTaskText,
+                            subTask.completed && styles.subTaskTextCompleted
+                          ]}>
+                            {subTask.title}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+
+                  {/* Add Sub-task Button */}
+                  <TouchableOpacity 
+                    style={styles.addSubTaskButton}
+                    onPress={() => setShowSubTaskModal(true)}
+                  >
+                    <Plus size={18} color="#dc2626" />
+                    <Text style={styles.addSubTaskText}>Add Sub-task</Text>
                   </TouchableOpacity>
                 </ScrollView>
 
@@ -384,6 +589,59 @@ export default function TodayScreen() {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
+      {/* Add Sub-task Modal */}
+      <Modal
+        visible={showSubTaskModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowSubTaskModal(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowSubTaskModal(false)}>
+          <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView
+              style={{ flex: 1, justifyContent: 'flex-end' }}
+              behavior={Platform.OS === "ios" ? "padding" : undefined}
+            >
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={styles.subTaskModalSheet}>
+                  <View style={styles.subTaskModalHeader}>
+                    <Text style={styles.subTaskModalTitle}>Add Sub-task</Text>
+                    <TouchableOpacity onPress={() => setShowSubTaskModal(false)}>
+                      <X size={22} color="#6b7280" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <TextInput
+                    style={styles.subTaskTitleInput}
+                    placeholder="Sub-task title..."
+                    value={newSubTaskTitle}
+                    onChangeText={setNewSubTaskTitle}
+                    autoFocus
+                  />
+
+                  <View style={styles.subTaskModalButtons}>
+                    <TouchableOpacity 
+                      style={styles.cancelButton}
+                      onPress={() => setShowSubTaskModal(false)}
+                    >
+                      <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity 
+                      style={[styles.addButton2, !newSubTaskTitle.trim() && styles.addButtonDisabled]}
+                      onPress={addSubTask}
+                      disabled={!newSubTaskTitle.trim()}
+                    >
+                      <Text style={styles.addButtonText}>Add</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 }
@@ -398,8 +656,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#f97316',
     borderWidth: 1,
     borderColor: '#f97316',
   },
@@ -462,11 +718,11 @@ const styles = StyleSheet.create({
   categoryChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#d1d5db', marginRight: 8 },
   categoryChipText: { fontSize: 14, color: '#374151' },
   bottomRow: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginTop: 10,  
-},
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,  
+  },
   dropdown: { flexDirection: 'row', alignItems: 'center' },
   dropdownText: { fontSize: 15, color: '#374151' },
   sendButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f44336', justifyContent: 'center', alignItems: 'center' },
@@ -475,14 +731,109 @@ const styles = StyleSheet.create({
 
   // MODAL DETAIL
   detailOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.1)' },
-  detailSheet: { backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 20, height: '60%' },
+  detailSheet: { backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 20, height: '80%' },
   detailHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   detailTag: { fontSize: 14, color: '#6b7280' },
   detailTitle: { fontSize: 20, fontWeight: '700', marginBottom: 6 },
   detailDescription: { fontSize: 16, color: '#6b7280', marginBottom: 16 },
-  subTask: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
-  subCircle: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#d1d5db', marginRight: 12 },
-  subText: { fontSize: 16, color: '#1a1a1a' },
+  editTitleInput: { 
+    fontSize: 20, 
+    fontWeight: '700', 
+    marginBottom: 6, 
+    borderWidth: 1, 
+    borderColor: '#e5e7eb', 
+    borderRadius: 8, 
+    padding: 8,
+    minHeight: 40
+  },
+  editDescriptionInput: { 
+    fontSize: 16, 
+    color: '#6b7280', 
+    marginBottom: 16, 
+    borderWidth: 1, 
+    borderColor: '#e5e7eb', 
+    borderRadius: 8, 
+    padding: 8,
+    minHeight: 40
+  },
+
+  // SUB-TASKS
+  subTasksSection: { marginBottom: 20 },
+  subTasksHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 12,
+    paddingVertical: 8
+  },
+  subTasksTitle: { fontSize: 16, fontWeight: '600', color: '#1a1a1a' },
+  subTaskItem: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingVertical: 8,
+    marginLeft: 8
+  },
+  subTaskCheckbox: {
+    width: 20, height: 20, borderRadius: 10,
+    borderWidth: 2, borderColor: '#d1d5db',
+    marginRight: 12,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  subTaskCheckboxCompleted: { backgroundColor: '#f44336', borderColor: '#f44336' },
+  subTaskText: { fontSize: 16, color: '#1a1a1a', flex: 1 },
+  subTaskTextCompleted: { textDecorationLine: 'line-through', color: '#9ca3af' },
+  addSubTaskButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingVertical: 12,
+    marginLeft: 8
+  },
+  addSubTaskText: { fontSize: 16, color: '#dc2626', marginLeft: 8, fontWeight: '500' },
+
+  // SUB-TASK MODAL
+  subTaskModalSheet: { 
+    backgroundColor: '#fff', 
+    borderTopLeftRadius: 20, 
+    borderTopRightRadius: 20, 
+    padding: 20, 
+    paddingBottom: 40 
+  },
+  subTaskModalHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 20 
+  },
+  subTaskModalTitle: { fontSize: 18, fontWeight: '600', color: '#1a1a1a' },
+  subTaskTitleInput: { 
+    fontSize: 16, 
+    borderWidth: 1, 
+    borderColor: '#e5e7eb', 
+    borderRadius: 8, 
+    padding: 12, 
+    marginBottom: 20,
+    minHeight: 44
+  },
+  subTaskModalButtons: { 
+    flexDirection: 'row', 
+    justifyContent: 'flex-end', 
+    gap: 12 
+  },
+  cancelButton: { 
+    paddingHorizontal: 20, 
+    paddingVertical: 10, 
+    borderRadius: 8 
+  },
+  cancelButtonText: { fontSize: 16, color: '#6b7280' },
+  addButton2: { 
+    paddingHorizontal: 20, 
+    paddingVertical: 10, 
+    borderRadius: 8, 
+    backgroundColor: '#f44336' 
+  },
+  addButtonDisabled: { backgroundColor: '#d1d5db' },
+  addButtonText: { fontSize: 16, color: '#ffffff', fontWeight: '500' },
+
   aiContainer: { flexDirection: 'row', alignItems: 'flex-end', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, padding: 8, marginTop: 12 },
   aiInput: { flex: 1, fontSize: 15, minHeight: 60, textAlignVertical: 'top', paddingHorizontal: 8 },
   magicButton: { padding: 8 },
