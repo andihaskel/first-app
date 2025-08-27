@@ -391,7 +391,7 @@ export default function TodayScreen() {
       {/* Tasks List */}
       <ScrollView style={styles.tasksList} showsVerticalScrollIndicator={false}>
         {tasks.map((task) => (
-          <Animated.View
+          <RNAnimated.View
             key={task.id}
             style={[
               styles.taskItem,
@@ -433,7 +433,7 @@ export default function TodayScreen() {
               {/* Separator */}
               <View style={styles.separator} />
             </TouchableOpacity>
-          </Animated.View>
+          </RNAnimated.View>
         ))}
       </ScrollView>
 
