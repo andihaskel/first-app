@@ -1,7 +1,7 @@
 import { 
   View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, 
   KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback, Keyboard,
-  Dimensions, Animated
+  Dimensions
 } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import { Plus, TrendingUp, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, ChevronRight, Check, ChevronDown } from 'lucide-react-native';
