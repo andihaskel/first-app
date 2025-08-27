@@ -8,15 +8,13 @@ import { Plus, TrendingUp, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, Chev
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
-import { 
-  Animated as ReanimatedAnimated,
+import Animated, {
   useSharedValue, 
   useAnimatedStyle, 
   withSpring, 
   runOnJS,
   interpolate,
   Extrapolate
-} from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 const { height } = Dimensions.get('window');
@@ -556,9 +554,9 @@ export default function TodayScreen() {
           <View style={styles.detailOverlay}>
             <TouchableWithoutFeedback>
               <GestureDetector gesture={panGesture}>
-                <ReanimatedAnimated.View style={[styles.detailSheet, animatedModalStyle]}>
+                <Animated.View style={[styles.detailSheet, animatedModalStyle]}>
                   {/* Drag Handle */}
-                  <ReanimatedAnimated.View style={[styles.dragHandle, animatedHandleStyle]} />
+                  <Animated.View style={[styles.dragHandle, animatedHandleStyle]} />
                   
                   <KeyboardAvoidingView
                     style={styles.detailContent}
@@ -675,7 +673,7 @@ export default function TodayScreen() {
                       </View>
                     )}
                   </KeyboardAvoidingView>
-                </ReanimatedAnimated.View>
+                </Animated.View>
               </GestureDetector>
             </TouchableWithoutFeedback>
           </View>
