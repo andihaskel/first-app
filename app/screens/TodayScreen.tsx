@@ -1,7 +1,7 @@
 import { 
   View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, 
   KeyboardAvoidingView, Platform, Modal, TouchableWithoutFeedback, Keyboard,
-  Dimensions
+  Dimensions, Animated as RNAnimated
 } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import { Plus, TrendingUp, Calendar, Flag, Bell, Inbox, Undo2, Sparkles, X, ChevronRight, Check, ChevronDown } from 'lucide-react-native';
@@ -36,7 +36,7 @@ interface Task {
   description: string;
   completed: boolean;
   isCompleting?: boolean;
-  fadeAnim?: Animated.Value;
+  fadeAnim?: RNAnimated.Value;
   emoji: string;
   category: string;
   tag: string;
@@ -74,7 +74,7 @@ export default function TodayScreen() {
   useEffect(() => {
     setTasks(prev => prev.map(task => ({
       ...task,
-      fadeAnim: task.fadeAnim || new Animated.Value(1)
+      fadeAnim: task.fadeAnim || new RNAnimated.Value(1)
     })));
   }, []);
 
@@ -86,7 +86,7 @@ export default function TodayScreen() {
   // Undo state
   const [showUndo, setShowUndo] = useState(false);
   const [lastCompleted, setLastCompleted] = useState<Task | null>(null);
-  const undoAnim = useRef(new Animated.Value(0)).current;
+  const undoAnim = useRef(new RNAnimated.Value(0)).current;
   let undoTimer: NodeJS.Timeout;
 
   // Detail modal state
@@ -118,7 +118,7 @@ export default function TodayScreen() {
     // After 500ms, start slide up and fade out animation
     setTimeout(() => {
       if (task.fadeAnim) {
-        Animated.timing(task.fadeAnim, {
+        RNAnimated.timing(task.fadeAnim, {
           toValue: 0,
           duration: 300,
           useNativeDriver: true,
@@ -128,14 +128,14 @@ export default function TodayScreen() {
           setLastCompleted(task);
 
           setShowUndo(true);
-          Animated.timing(undoAnim, {
+          RNAnimated.timing(undoAnim, {
             toValue: 1,
             duration: 250,
             useNativeDriver: true,
           }).start();
 
           undoTimer = setTimeout(() => {
-            Animated.timing(undoAnim, {
+            RNAnimated.timing(undoAnim, {
               toValue: 0,
               duration: 250,
               useNativeDriver: true,
@@ -179,13 +179,13 @@ export default function TodayScreen() {
       const restoredTask = {
         ...lastCompleted,
         isCompleting: false,
-        fadeAnim: new Animated.Value(1)
+        fadeAnim: new RNAnimated.Value(1)
       };
       setTasks(prev => [...prev, restoredTask]);
       setLastCompleted(null);
     }
     clearTimeout(undoTimer);
-    Animated.timing(undoAnim, {
+    RNAnimated.timing(undoAnim, {
       toValue: 0,
       duration: 200,
       useNativeDriver: true,
@@ -202,7 +202,7 @@ export default function TodayScreen() {
         emoji: '',
         category: selectedCategory,
         tag: 'Inbox 📥',
-        fadeAnim: new Animated.Value(1),
+        fadeAnim: new RNAnimated.Value(1),
         subTasks: []
       };
       setTasks([...tasks, newTask]);
@@ -439,7 +439,7 @@ export default function TodayScreen() {
 
       {/* Undo Snackbar */}
       {showUndo && (
-        <Animated.View 
+        <RNAnimated.View 
           style={[
             styles.undoContainer,
             {
@@ -457,7 +457,7 @@ export default function TodayScreen() {
               <Text style={styles.undoSubText}>Completed</Text>
             </View>
           </TouchableOpacity>
-        </Animated.View>
+        </RNAnimated.View>
       )}
 
       {/* FAB */}
